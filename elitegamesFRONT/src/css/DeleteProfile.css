@@ -1,0 +1,74 @@
+.delete-profile-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #ffffff;
+    padding: 2rem;
+}
+
+.delete-profile-card {
+    width: 100%;
+    max-width: 500px;
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.delete-profile-card h1 {
+    margin-bottom: 1rem;
+    color: #ef4444;
+}
+
+.warning-text {
+    margin-bottom: 1rem;
+    color: #cbd5e1;
+}
+
+.delete-list {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+    color: #f1f5f9;
+}
+
+.confirmation-text {
+    margin-bottom: 1rem;
+}
+
+.delete-input {
+    width: 100%;
+    padding: 0.9rem;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.btn-delete-profile {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 10px;
+    background: #dc2626;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-delete-profile:hover {
+    background: #b91c1c;
+}
+
+.btn-delete-profile:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.delete-message {
+    margin-top: 1rem;
+    text-align: center;
+}

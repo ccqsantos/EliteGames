@@ -1,0 +1,147 @@
+/* FreelancerPreferences.css */
+
+.preferences-page {
+    min-height: 100vh;
+    background: #f5f7fb;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.preferences-container {
+    width: 100%;
+    max-width: 800px;
+    background: white;
+    border-radius: 18px;
+    padding: 32px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.preferences-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 10px;
+}
+
+.preferences-subtitle {
+    color: #64748b;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+.preferences-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-section label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.form-section input,
+.form-section textarea,
+.form-section select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #dbe2ea;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    background: #fff;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.form-section textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-section input:focus,
+.form-section textarea:focus,
+.form-section select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.skills-helper {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: -2px;
+}
+
+.preferences-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.btn-save-preferences {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 14px 26px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-save-preferences:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.preferences-message {
+    margin-top: 20px;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 500;
+}
+
+.preferences-message.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.preferences-message.error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+@media (max-width: 768px) {
+
+    .preferences-page {
+        padding: 20px 12px;
+    }
+
+    .preferences-container {
+        padding: 24px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .preferences-title {
+        font-size: 1.7rem;
+    }
+}

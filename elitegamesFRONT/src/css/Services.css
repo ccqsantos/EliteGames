@@ -1,0 +1,708 @@
+.services-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.services-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.services-header h1 {
+    font-size: 2rem;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.services-header p {
+    color: #666;
+}
+
+.btn-create-service {
+    background: #2ce852;
+    color: #1a1a1a;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-create-service:hover {
+    background: #287d00;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.service-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.service-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.service-header h3 {
+    font-size: 1.25rem;
+    color: #1a1a1a;
+    flex: 1;
+}
+
+.service-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-edit, .btn-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.btn-edit {
+    color: #2ce852;
+}
+
+.btn-edit:hover {
+    color: #287d00;
+    background: rgba(44, 232, 82, 0.1);
+}
+
+.btn-delete {
+    color: #ff4444;
+}
+
+.btn-delete:hover {
+    color: #cc0000;
+    background: rgba(255, 68, 68, 0.1);
+}
+
+.service-description {
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.service-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.service-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #287d00;
+}
+
+.service-delivery {
+    color: #666;
+    font-size: 0.875rem;
+}
+
+.category-tag {
+    background: rgba(44, 232, 82, 0.1);
+    color: #2ce852;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.skill-tag {
+    background: #f0f0f0;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.service-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: #999;
+    margin-bottom: 1rem;
+}
+
+.btn-hire {
+    width: 100%;
+    background: #2ce852;
+    color: #1a1a1a;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-hire:hover {
+    background: #287d00;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.service-form {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e5e5e5;
+    border-radius: 8px;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #2ce852;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-cancel {
+    background: #f0f0f0;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-submit {
+    background: #2ce852;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.freelancer-name {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.no-services {
+    text-align: center;
+    padding: 3rem;
+    color: #999;
+}
+
+@media (max-width: 768px) {
+    .services-container {
+        padding: 1rem;
+    }
+
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Filtros de categoria */
+.category-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+}
+
+.filter-chip {
+    background: #f0f0f0;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    color: #666;
+}
+
+.filter-chip:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.filter-chip.active {
+    background: #2ce852;
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+/* Botão de ver clientes */
+.btn-view-clients {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    color: #2ce852;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.btn-view-clients:hover {
+    background: rgba(44, 232, 82, 0.1);
+    transform: scale(1.05);
+}
+
+/* Tabela de clientes */
+.clients-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.clients-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.clients-table th {
+    text-align: left;
+    padding: 12px;
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #1a1a1a;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.clients-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.clients-table tr:hover {
+    background: #f9f9f9;
+}
+
+.client-name {
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.client-email {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.order-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.order-status.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.order-status.in_progress {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+.order-status.delivered {
+    background: #cff4fc;
+    color: #055160;
+}
+
+.order-status.completed {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.order-status.cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.order-amount {
+    font-weight: 600;
+    color: #287d00;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-close {
+    background: #f0f0f0;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-close:hover {
+    background: #e0e0e0;
+}
+
+.no-clients {
+    text-align: center;
+    padding: 2rem;
+    color: #999;
+}
+
+.loading-spinner-small {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+/* Ajuste do header do serviço para acomodar os botões */
+.service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.service-actions {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+/* Botão de entregar serviço no card */
+.btn-deliver-service {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.6rem;
+    background: #2ce852;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-deliver-service:hover {
+    background: #287d00;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Botão de entregar na tabela */
+.btn-deliver {
+    background: #2ce852;
+    color: #1a1a1a;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.btn-deliver:hover {
+    background: #287d00;
+    color: white;
+}
+
+/* Badges de status na tabela */
+.badge-delivered {
+    background: #cff4fc;
+    color: #055160;
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.badge-completed {
+    background: #d1e7dd;
+    color: #0f5132;
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.badge-cancelled {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.order-actions-cell {
+    white-space: nowrap;
+}
+
+/* Exibição de estrelas */
+.star-display {
+    display: inline-flex;
+    gap: 2px;
+    align-items: center;
+}
+
+.star-display .star {
+    font-size: 0.8rem;
+    color: #ddd;
+}
+
+.star-display .star.filled {
+    color: #ffc107;
+}
+
+/* Célula de avaliação na tabela */
+.review-cell {
+    max-width: 250px;
+}
+
+.btn-view-review {
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.review-comment-preview {
+    font-size: 0.7rem;
+    color: #666;
+    display: block;
+}
+
+.no-review {
+    color: #999;
+    font-size: 0.75rem;
+    font-style: italic;
+}
+
+/* Modal de visualização da avaliação */
+.review-view-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    z-index: 1001;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.review-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.review-client {
+    font-size: 1rem;
+    color: #1a1a1a;
+}
+
+.review-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.review-comment {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.review-comment p {
+    margin: 0.5rem 0 0 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.review-date p {
+    margin: 0.25rem 0 0 0;
+    color: #666;
+    font-size: 0.875rem;
+}
+
+/* Ajuste do modal de clientes para telas menores */
+.clients-modal {
+    max-width: 90vw;
+    width: auto;
+    min-width: 600px;
+}
+
+@media (max-width: 768px) {
+    .clients-modal {
+        min-width: auto;
+        width: 95%;
+    }
+
+    .clients-table {
+        font-size: 0.75rem;
+    }
+
+    .review-cell {
+        max-width: 150px;
+    }
+}
+
+/* Rating display no card do serviço */
+.rating-display {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Botão de atualizar */
+.btn-refresh {
+    background: #f0f0f0;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-right: 0.5rem;
+}
+
+.btn-refresh:hover {
+    background: #e0e0e0;
+    transform: scale(1.02);
+}
