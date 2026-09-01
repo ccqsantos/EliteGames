@@ -2,6 +2,7 @@ import React from 'react';
 import '../css/Footer.css';
 import { Link } from 'react-router-dom';
 import logo from "../assets/elitegames_logo2_outline.png"
+import {FaDiscord, FaInstagram, FaTwitch, FaTwitter, FaYoutube} from "react-icons/fa";
 
 const Footer = () => {
     return (
@@ -96,19 +97,19 @@ const Footer = () => {
                     </div>
                     <div className="social-links">
                         <a href="#" className="social-link" aria-label="YouTube">
-                            <span>▶️</span>
+                            <FaYoutube size={20}/>
                         </a>
                         <a href="#" className="social-link" aria-label="Twitter">
-                            <span>🐦</span>
+                            <FaTwitter size={20}/>
                         </a>
                         <a href="#" className="social-link" aria-label="Instagram">
-                            <span>📷</span>
+                            <FaInstagram size={20}/>
                         </a>
                         <a href="#" className="social-link" aria-label="Discord">
-                            <span>💬</span>
+                            <FaDiscord size={20}/>
                         </a>
                         <a href="#" className="social-link" aria-label="Twitch">
-                            <span>🎥</span>
+                            <FaTwitch size={20}/>
                         </a>
                     </div>
                 </div>
