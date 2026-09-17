@@ -9,8 +9,8 @@ import {
 } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../css/Auth.css";
-import {FaDiscord, FaTwitch, FaYoutube} from "react-icons/fa";
-import logo from "../assets/elitegames_logo1_outline.png"
+import {FaApple, FaDiscord, FaGoogle, FaTwitch, FaYoutube} from "react-icons/fa";
+import logo from "../assets/elitegames_logo1_outline.png";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -112,13 +112,14 @@ const Login = () => {
 
     return (
         <div className="auth-container login-container">
-            <div className="auth-card login-card">
+            <div className="auth-card join-card">
+                {/* Cabeçalho */}
                 <div className="auth-header">
                     <div className="auth-icon">
-                        <img src={logo} style={{width: 100, height: 100}} alt="logo EliteGames"/>
+                        <img src={logo} style={{ width: 100, height: 100 }} alt="logo EliteGames" />
                     </div>
                     <h2>Bem-vindo de <span className="highlight">volta</span></h2>
-                    <p>Entre na <span className="highlight-text">Elite</span> e continue dominando</p>
+                    <p>Entre na<span className="highlight-text">Elite</span>e continue dominando</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="auth-form">
@@ -216,13 +217,10 @@ const Login = () => {
 
                 <div className="social-login">
                     <button type="button" className="btn-social" disabled={loading}>
-                        <FaDiscord size={20}/> Discord
+                        <FaGoogle size={20} />Google
                     </button>
                     <button type="button" className="btn-social" disabled={loading}>
-                        <FaYoutube size={20}/> YouTube
-                    </button>
-                    <button type="button" className="btn-social" disabled={loading}>
-                        <FaTwitch size={18}/> Twitch
+                        <FaApple size={24} />Apple
                     </button>
                 </div>
 
