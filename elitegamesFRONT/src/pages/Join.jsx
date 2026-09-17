@@ -1,318 +1,222 @@
 import React, { useState } from 'react';
-import { BsFillEyeFill, BsFillEyeSlashFill } from 'react-icons/bs';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import '../css/Auth.css';
-import logo from "../assets/elitegames_logo2_outline.png"
+import { Mail, ArrowRight } from 'lucide-react';
 
-const Join = () => {
-    const navigate = useNavigate();
-    const { register } = useAuth();
-
+export default function Join() {
     const [formData, setFormData] = useState({
-        fullName: '',
+        nome: '',
+        sobrenome: '',
         email: '',
-        password: '',
-        confirmPassword: '',
-        userType: 'gamer',
-        agreeTerms: false
+        telefone: '',
+        senha: '',
+        confirmarSenha: '',
     });
 
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [errors, setErrors] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
+    const [aceitouTermos, setAceitouTermos] = useState(false);
 
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData({
-            ...formData,
-            [name]: type === 'checkbox' ? checked : value
-        });
-
-        if (errors[name]) {
-            setErrors({
-                ...errors,
-                [name]: null
-            });
-        }
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const validateForm = () => {
-        const newErrors = {};
-
-        if (!formData.fullName.trim()) {
-            newErrors.fullName = 'Nome completo é obrigatório';
-        }
-
-        if (!formData.email.trim()) {
-            newErrors.email = 'E-mail é obrigatório';
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'E-mail inválido';
-        }
-
-        if (!formData.password) {
-            newErrors.password = 'Senha é obrigatória';
-        } else if (formData.password.length < 6) {
-            newErrors.password = 'Senha deve ter no mínimo 6 caracteres';
-        }
-
-        if (formData.password !== formData.confirmPassword) {
-            newErrors.confirmPassword = 'As senhas não coincidem';
-        }
-
-        if (!formData.agreeTerms) {
-            newErrors.agreeTerms = 'Você precisa aceitar os termos';
-        }
-
-        return newErrors;
-    };
-
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setErrors({});
-
-        const validationErrors = validateForm();
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
+        if (!aceitouTermos) {
+            alert('Você precisa aceitar os Termos de Serviço.');
             return;
         }
-
-        setIsLoading(true);
-
-        const payload = {
-            name: formData.fullName,
-            email: formData.email,
-            password: formData.password,
-            role: formData.userType.toUpperCase()
-        };
-
-        try {
-            const result = await register(payload);
-            if (result.success) {
-                navigate("/");
-            } else {
-                setErrors({
-                    api: result.error || 'Erro ao criar conta. Tente novamente.'
-                });
-            }
-        } catch (error) {
-            console.error('Erro no cadastro:', error);
-            setErrors({
-                api: 'Erro ao conectar com o servidor. Tente novamente mais tarde.'
-            });
-        } finally {
-            setIsLoading(false);
-        }
+        console.log('Dados do cadastro:', formData);
+        // Aqui você faria a chamada para sua API
     };
 
     return (
-        <div className="auth-container">
-            <div className="auth-card join-card">
-                <div className="auth-header">
-                    <div className="auth-icon"><img src={logo} style={{
-                        height: 100,
-                        width: 100,
-                    }} alt="logo EliteGames"/></div>
-                    <h2>Crie sua conta <span className="highlight">Elite</span></h2>
-                    <p>Entre para o time dos melhores gamers do Brasil</p>
+        <section className="bg-[#0a0a0a] text-white py-16 px-4 md:px-8 max-w-7xl mx-auto">
+            <div className="flex flex-col lg:flex-row gap-12 items-start">
+                {/* Coluna Esquerda - Informações */}
+                <div className="flex-1 space-y-6 lg:sticky lg:top-8">
+                    <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+                        Crie sua <span className="text-purple-500">Conta</span><br />
+                        e Comece Agora.
+                    </h1>
+                    <p className="text-gray-400 text-lg max-w-md">
+                        Cadastre-se na Nova Labs e tenha acesso a GPUs de alto desempenho para IA, renderização e jogos com entrega rápida.
+                    </p>
+
+                    <div className="flex gap-8 py-4">
+                        <div>
+                            <p className="text-2xl font-bold text-purple-400">+240 FPS</p>
+                            <p className="text-sm text-gray-500">Média em jogos</p>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-white">8K Ultra</p>
+                            <p className="text-sm text-gray-500">Resolução máxima</p>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-white">3 Anos</p>
+                            <p className="text-sm text-gray-500">De garantia</p>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-md font-semibold transition">
+                            Alugar Agora
+                        </button>
+                        <button className="border border-gray-700 hover:border-gray-500 text-white px-8 py-3 rounded-md font-semibold transition">
+                            Ver Planos
+                        </button>
+                    </div>
+
+                    <div className="pt-6 border-t border-gray-800">
+                        <p className="text-sm text-gray-400">
+                            Já possui uma conta?{' '}
+                            <a href="/login" className="text-purple-400 hover:text-purple-300 font-medium hover:underline">
+                                Fazer login
+                            </a>
+                        </p>
+                    </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="auth-form">
-                    {errors.api && (
-                        <div className="error-message api-error">
-                            {errors.api}
+                {/* Coluna Direita - Formulário */}
+                <div className="flex-1 w-full max-w-lg bg-[#0f0f0f] border border-[#1f1f1f] rounded-2xl p-8 md:p-10">
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* Nome e Sobrenome lado a lado */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-white mb-2">
+                                    Nome
+                                </label>
+                                <input
+                                    type="text"
+                                    name="nome"
+                                    value={formData.nome}
+                                    onChange={handleChange}
+                                    placeholder="Digite seu nome"
+                                    required
+                                    className="w-full bg-[#0a0a0a] border border-[#262626] rounded-md px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-white mb-2">
+                                    Sobrenome
+                                </label>
+                                <input
+                                    type="text"
+                                    name="sobrenome"
+                                    value={formData.sobrenome}
+                                    onChange={handleChange}
+                                    placeholder="Digite seu sobrenome"
+                                    required
+                                    className="w-full bg-[#0a0a0a] border border-[#262626] rounded-md px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition"
+                                />
+                            </div>
                         </div>
-                    )}
 
-                    <div className="form-group">
-                        <label htmlFor="fullName">Nome completo</label>
-                        <div className="input-icon">
+                        {/* E-mail */}
+                        <div>
+                            <label className="block text-sm font-medium text-white mb-2">
+                                E-mail
+                            </label>
+                            <div className="relative">
+                                <Mail
+                                    size={16}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"
+                                />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    placeholder="Ex: seuemail@novalabs.com"
+                                    required
+                                    className="w-full bg-[#0a0a0a] border border-[#262626] rounded-md pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Telefone */}
+                        <div>
+                            <label className="block text-sm font-medium text-white mb-2">
+                                Telefone
+                            </label>
                             <input
-                                type="text"
-                                id="fullName"
-                                name="fullName"
-                                value={formData.fullName}
+                                type="tel"
+                                name="telefone"
+                                value={formData.telefone}
                                 onChange={handleChange}
-                                placeholder="Seu nome completo"
-                                disabled={isLoading}
-                                className={errors.fullName ? 'error' : ''}
+                                placeholder="(11) 99999-9999"
+                                required
+                                className="w-full bg-[#0a0a0a] border border-[#262626] rounded-md px-4 py-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-purple-500 transition"
                             />
                         </div>
-                        {errors.fullName && (
-                            <span className="error-message">{errors.fullName}</span>
-                        )}
-                    </div>
 
-                    <div className="form-group">
-                        <label htmlFor="email">E-mail</label>
-                        <div className="input-icon">
+                        {/* Senha */}
+                        <div>
+                            <label className="block text-sm font-medium text-white mb-2">
+                                Senha
+                            </label>
                             <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                value={formData.email}
+                                type="password"
+                                name="senha"
+                                value={formData.senha}
                                 onChange={handleChange}
-                                placeholder="seu@email.com"
-                                disabled={isLoading}
-                                className={errors.email ? 'error' : ''}
+                                placeholder="Crie uma senha forte"
+                                required
+                                className="w-full bg-[#0a0a0a] border border-[#262626] rounded-md px-4 py-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-purple-500 transition"
                             />
                         </div>
-                        {errors.email && (
-                            <span className="error-message">{errors.email}</span>
-                        )}
-                    </div>
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="password">Senha</label>
-                            <div className="input-icon password-input">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    id="password"
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    placeholder="Mínimo 6 caracteres"
-                                    disabled={isLoading}
-                                    className={errors.password ? 'error' : ''}
-                                />
-                                <button
-                                    type="button"
-                                    className="password-toggle-btn"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    tabIndex="-1"
-                                    disabled={isLoading}
-                                >
-                                    {showPassword ? <BsFillEyeSlashFill /> : <BsFillEyeFill />}
-                                </button>
-                            </div>
-                            {errors.password && (
-                                <span className="error-message">{errors.password}</span>
-                            )}
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="confirmPassword">Confirmar senha</label>
-                            <div className="input-icon password-input">
-                                <input
-                                    type={showConfirmPassword ? "text" : "password"}
-                                    id="confirmPassword"
-                                    name="confirmPassword"
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                    placeholder="Digite novamente"
-                                    disabled={isLoading}
-                                    className={errors.confirmPassword ? 'error' : ''}
-                                />
-                                <button
-                                    type="button"
-                                    className="password-toggle-btn"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    tabIndex="-1"
-                                    disabled={isLoading}
-                                >
-                                    {showConfirmPassword ? <BsFillEyeSlashFill /> : <BsFillEyeFill />}
-                                </button>
-                            </div>
-                            {errors.confirmPassword && (
-                                <span className="error-message">{errors.confirmPassword}</span>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Tipo de perfil</label>
-                        <div className="user-type-selector">
-                            <label className={`type-option ${formData.userType === 'gamer' ? 'active' : ''}`}>
-                                <input
-                                    type="radio"
-                                    name="userType"
-                                    value="gamer"
-                                    checked={formData.userType === 'gamer'}
-                                    onChange={handleChange}
-                                    disabled={isLoading}
-                                />
-                                <span className="type-icon">🎯</span>
-                                <span className="type-name">Gamer</span>
-                                <span className="type-desc">Comprar produtos</span>
+                        {/* Confirmação de Senha */}
+                        <div>
+                            <label className="block text-sm font-medium text-white mb-2">
+                                Confirmação de Senha
                             </label>
-                            <label className={`type-option ${formData.userType === 'elite' ? 'active' : ''}`}>
-                                <input
-                                    type="radio"
-                                    name="userType"
-                                    value="elite"
-                                    checked={formData.userType === 'elite'}
-                                    onChange={handleChange}
-                                    disabled={isLoading}
-                                />
-                                <span className="type-icon">⭐</span>
-                                <span className="type-name">Elite</span>
-                                <span className="type-desc">Acesso premium</span>
+                            <input
+                                type="password"
+                                name="confirmarSenha"
+                                value={formData.confirmarSenha}
+                                onChange={handleChange}
+                                placeholder="Confirme a senha"
+                                required
+                                className="w-full bg-[#0a0a0a] border border-[#262626] rounded-md px-4 py-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-purple-500 transition"
+                            />
+                        </div>
+
+                        {/* Checkbox de Termos */}
+                        <div className="flex items-start gap-3 pt-2">
+                            <input
+                                type="checkbox"
+                                id="termos"
+                                checked={aceitouTermos}
+                                onChange={(e) => setAceitouTermos(e.target.checked)}
+                                required
+                                className="mt-1 w-4 h-4 rounded border-[#262626] bg-[#0a0a0a] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer accent-purple-600"
+                            />
+                            <label htmlFor="termos" className="text-xs text-neutral-400 leading-relaxed cursor-pointer">
+                                Estou de acordo com os{' '}
+                                <a href="#" className="text-purple-400 hover:text-purple-300 hover:underline">
+                                    Termos de Serviço
+                                </a>{' '}
+                                e a{' '}
+                                <a href="#" className="text-purple-400 hover:text-purple-300 hover:underline">
+                                    Política de Privacidade
+                                </a>{' '}
+                                da Nova Labs.
                             </label>
                         </div>
-                    </div>
 
-                    <label className="checkbox-label terms-checkbox">
-                        <input
-                            type="checkbox"
-                            name="agreeTerms"
-                            checked={formData.agreeTerms}
-                            onChange={handleChange}
-                            disabled={isLoading}
-                        />
-                        <span>
-                            Eu concordo com os <Link to="/terms">Termos de Serviço</Link> e{' '}
-                            <Link to="/privacy">Política de Privacidade</Link>
-                        </span>
-                    </label>
-                    {errors.agreeTerms && (
-                        <span className="error-message">{errors.agreeTerms}</span>
-                    )}
-
-                    <button
-                        type="submit"
-                        className="btn-auth-primary"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? (
-                            <>
-                                <span className="spinner"></span>
-                                Criando conta...
-                            </>
-                        ) : (
-                            'Criar conta gratuita'
-                        )}
-                    </button>
-
-                    <div className="auth-divider">
-                        <span>ou cadastre-se com</span>
-                    </div>
-
-                    <div className="social-login">
-                        <button type="button" className="btn-social" disabled={isLoading}>
-                            <span className="social-icon">🎮</span> Discord
+                        {/* Botão de Envio */}
+                        <button
+                            type="submit"
+                            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm uppercase tracking-wider py-3.5 rounded-md transition flex items-center justify-center gap-2 group"
+                        >
+                            Criar Minha Conta
+                            <ArrowRight
+                                size={16}
+                                className="group-hover:translate-x-1 transition"
+                            />
                         </button>
-                        <button type="button" className="btn-social" disabled={isLoading}>
-                            <span className="social-icon">▶️</span> YouTube
-                        </button>
-                        <button type="button" className="btn-social" disabled={isLoading}>
-                            <span className="social-icon">💬</span> Twitch
-                        </button>
-                    </div>
-                </form>
-
-                <div className="auth-footer">
-                    <p>
-                        Já tem uma conta? <Link to="/login" className="auth-link">Faça login</Link>
-                    </p>
-                    <p className="footer-note">
-                        🎮 Junte-se à Elite e domine o jogo!
-                    </p>
+                    </form>
                 </div>
             </div>
-        </div>
+        </section>
     );
-};
-
-export default Join;
+}
