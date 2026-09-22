@@ -1,6 +1,5 @@
 package com.elitegames.dto;
 
-import com.elitegames.entity.Category;
 import lombok.Data;
 
 @Data
