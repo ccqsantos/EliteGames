@@ -1,7 +1,6 @@
 package com.elitegames.service;
 
 import com.elitegames.dto.FreelancerPreferenceRequest;
-import com.elitegames.entity.FreelancerPreferences;
 import com.elitegames.entity.User;
 import com.elitegames.repository.FreelancerPreferencesRepository;
 import com.elitegames.repository.UserRepository;

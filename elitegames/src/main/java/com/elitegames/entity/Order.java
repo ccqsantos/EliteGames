@@ -22,7 +22,7 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "service_id", nullable = false)
-    private FreelanceService service;  // 🔧 Nome do campo: service (não freelanceService)
+    private StoreService service;  // 🔧 Nome do campo: service (não freelanceService)
 
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)

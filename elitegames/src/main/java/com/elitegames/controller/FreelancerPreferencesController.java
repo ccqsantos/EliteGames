@@ -1,7 +1,6 @@
 package com.elitegames.controller;
 
 import com.elitegames.dto.FreelancerPreferenceRequest;
-import com.elitegames.entity.FreelancerPreferences;
 import com.elitegames.service.FreelancerPreferencesService;
 import com.elitegames.config.JwtUtil;
 
