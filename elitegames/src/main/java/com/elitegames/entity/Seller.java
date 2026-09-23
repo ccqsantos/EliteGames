@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "seller")
-public class Seller extends Account {
+public class Seller extends User {
     private String storeName;
     private String storeSlug;
     private String taxId;

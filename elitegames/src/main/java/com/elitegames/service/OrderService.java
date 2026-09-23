@@ -14,16 +14,16 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository repository;
-    private final FreelanceServiceService freelanceServiceService;
+    private final ProductService productService;
 
     @Transactional
-    public Order create(FreelanceService freelanceService, User client) {
+    public Order create(Product productService, User client) {
         Order order = Order.builder()
-                .service(freelanceService)  // 🔧 Use .service() não .freelanceService()
+                .service(productService)  // 🔧 Use .service() não .freelanceService()
                 .client(client)
                 .status(OrderStatus.PENDING)
-                .totalAmount(freelanceService.getPrice())
-                .expectedDelivery(LocalDateTime.now().plusDays(freelanceService.getDeliveryTimeDays()))
+                .totalAmount(productService.getPrice())
+                .expectedDelivery(LocalDateTime.now().plusDays(ProductService.getDeliveryTimeDays()))
                 .build();
 
         return repository.save(order);
@@ -155,9 +155,9 @@ public class OrderService {
                 .average()
                 .orElse(0.0);
 
-        FreelanceService freelanceService = freelanceServiceService.getById(serviceId);
-        freelanceService.setAverageRating(Math.round(average * 10) / 10.0);
-        freelanceService.setOrdersCompleted(completedOrders.size());
-        freelanceServiceService.save(freelanceService);
+        ProductService productService = productService.getById(serviceId);
+        productService.setAverageRating(Math.round(average * 10) / 10.0);
+        productService.setOrdersCompleted(completedOrders.size());
+        productService.save(productService);
     }
 }
