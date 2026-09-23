@@ -97,19 +97,19 @@ const Footer = () => {
                     </div>
                     <div className="social-links">
                         <a href="#" className="social-link" aria-label="YouTube">
-                            <FaYoutube size={20}/>
+                            <FaYoutube size={30}/>
                         </a>
                         <a href="#" className="social-link" aria-label="Twitter">
-                            <FaTwitter size={20}/>
+                            <FaTwitter size={30}/>
                         </a>
                         <a href="#" className="social-link" aria-label="Instagram">
-                            <FaInstagram size={20}/>
+                            <FaInstagram size={30}/>
                         </a>
                         <a href="#" className="social-link" aria-label="Discord">
-                            <FaDiscord size={20}/>
+                            <FaDiscord size={30}/>
                         </a>
                         <a href="#" className="social-link" aria-label="Twitch">
-                            <FaTwitch size={20}/>
+                            <FaTwitch size={30}/>
                         </a>
                     </div>
                 </div>
