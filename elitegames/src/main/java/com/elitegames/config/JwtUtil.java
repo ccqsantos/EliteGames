@@ -32,7 +32,7 @@ public class JwtUtil {
 
     public String generateToken(
             String email,
-            Long userId,
+            String userId,
             String role
     ) {
 

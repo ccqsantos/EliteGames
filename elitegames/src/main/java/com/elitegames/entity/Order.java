@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.elitegames.service.ProductService;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 
@@ -22,7 +24,7 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "service_id", nullable = false)
-    private StoreService service;  // 🔧 Nome do campo: service (não freelanceService)
+    private Product service;  // 🔧 Nome do campo: service (não freelanceService)
 
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)

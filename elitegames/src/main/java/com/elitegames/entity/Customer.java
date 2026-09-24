@@ -17,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "customer", indexes = @Index(columnList = "email", unique = true))
-public class Customer extends Account{
+public class Customer extends User{
     private String firstName;
     private String lastName;
     private String phone;
