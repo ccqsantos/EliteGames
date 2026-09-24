@@ -10,13 +10,11 @@
 }
 
 .header-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 5%;
+    width: 1300px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    height: 70px;
+    justify-content: space-evenly;
+    height: 60px;
 }
 
 /* Logo */

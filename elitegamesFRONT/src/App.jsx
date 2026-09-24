@@ -5,8 +5,8 @@ import Categories from "./components/home/Categories.jsx";
 import { Routes, Route } from 'react-router-dom';
 import Layout from "./components/Layout";
 import Profile from "./pages/Profile";
-import Freelancers from "./pages/Freelancers";
-import FreelancerPreferences from "./pages/./FreelancerPreferences.jsx";
+import Offers from "./pages/Offers.jsx";
+import Shop from "./pages/Shop.jsx";
 import DeleteProfile from "./pages/DeleteProfile.jsx";
 import ClientPreferences from "./pages/ClientPreferences.jsx";
 import Services from "./components/home/BestSellers.jsx";
@@ -27,9 +27,9 @@ function App() {
           <Route path="login" element={<Login />} />
           <Route path="profile" element={<Profile />} />x
           <Route path="trending-products" element={<TrendingProducts />} />
-          <Route path="freelancers" element={<Freelancers />} />
+          <Route path="offers" element={<Offers />} />
           <Route path="help" element={<Categories />} />
-          <Route path="freelancer-preferences" element={<FreelancerPreferences />} />
+          <Route path="shop" element={<Shop />} />
           <Route path="client-preferences" element={<ClientPreferences />} />
           <Route path="about" element={<About />} />
           <Route path="delete-profile" element={<DeleteProfile />} />
