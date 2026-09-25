@@ -1,4 +1,4 @@
-import React from 'react';
+    import React from 'react';
 
 export default function HeroSection() {
     return (
@@ -28,10 +28,10 @@ export default function HeroSection() {
                 </div>
 
                 <div className="flex gap-4">
-                    <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-md font-semibold transition">
+                    <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-md font-semibold transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-purple-600/20 font-semibold">
                         Alugar Agora
                     </button>
-                    <button className="border border-gray-700 hover:border-gray-500 text-white px-8 py-3 rounded-md font-semibold transition">
+                    <button className="bg-gray-700 hover:bg-gray-800 text-white px-8 py-3 rounded-md transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-gray-700/20 font-semibold">
                         Ver Planos
                     </button>
                 </div>
@@ -39,7 +39,7 @@ export default function HeroSection() {
 
             <div className="flex-1 flex justify-center">
                 <img
-                    src="../../assets/pc-placeholder.png"
+                    src="src/assets/hero-product-render.png"
                     alt="PC Gamer"
                     className="rounded-xl object-cover w-full max-w-lg shadow-2xl shadow-purple-900/20"
                 />
