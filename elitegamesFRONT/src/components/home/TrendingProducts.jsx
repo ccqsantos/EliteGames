@@ -2,10 +2,10 @@ import React from 'react';
 import { ShoppingCart } from 'lucide-react';
 
 const products = [
-    { id: 1, name: 'Monitor Gamer 27" 165Hz', price: 'R$ 1.499,00', oldPrice: 'R$ 1.899,00', img: '/api/placeholder/200/200' },
-    { id: 2, name: 'GeForce RTX 4070 Super', price: 'R$ 3.899,00', oldPrice: 'R$ 4.500,00', img: '/api/placeholder/200/200' },
-    { id: 3, name: 'Teclado Mecânico HyperX', price: 'R$ 349,00', oldPrice: 'R$ 499,00', img: '/api/placeholder/200/200' },
-    { id: 4, name: 'Headset Astro A50', price: 'R$ 1.299,00', oldPrice: 'R$ 1.599,00', img: '/api/placeholder/200/200' },
+    { id: 1, name: 'Monitor Gamer 27" 165Hz', price: 'R$ 1.499,00', oldPrice: 'R$ 1.899,00', img: '/src/assets/product-media (5).png' },
+    { id: 2, name: 'GeForce RTX 4070 Super', price: 'R$ 3.899,00', oldPrice: 'R$ 4.500,00', img: '/src/assets/product-media.png' },
+    { id: 3, name: 'Teclado Mecânico HyperX', price: 'R$ 349,00', oldPrice: 'R$ 499,00', img: '/src/assets/product-media (4).png' },
+    { id: 4, name: 'Headset Astro A50', price: 'R$ 1.299,00', oldPrice: 'R$ 1.599,00', img: '/src/assets/product-media (1).png' },
 ];
 
 export default function TrendingProducts() {
@@ -25,7 +25,7 @@ export default function TrendingProducts() {
                 {products.map((prod) => (
                     <div key={prod.id} className="bg-[#141414] border border-gray-800 rounded-xl p-4 flex flex-col group cursor-pointer hover:border-purple-500/50 transition">
                         <div className="bg-[#0a0a0a] rounded-lg mb-4 flex justify-center p-4">
-                            <img src={prod.img} alt={prod.name} className="h-40 object-contain group-hover:scale-105 transition" />
+                            <img src={prod.img} alt={prod.name} className="h-40 object-contain group-hover:scale-105 transition rounded-xl" />
                         </div>
                         <h3 className="font-medium text-sm mb-2">{prod.name}</h3>
                         <div className="mt-auto">

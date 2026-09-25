@@ -2,9 +2,9 @@ import React from 'react';
 import { ShoppingCart } from 'lucide-react';
 
 const bestSellers = [
-    { id: 1, name: 'RTX 4090 Suprim Liquid', price: 'R$ 12.499,00', img: '/api/placeholder/300/200' },
-    { id: 2, name: 'Teclado Mecânico Pro', price: 'R$ 899,00', img: '/api/placeholder/300/200' },
-    { id: 3, name: 'Cooler Fan RGB 120mm', price: 'R$ 149,00', img: '/api/placeholder/300/200' },
+    { id: 1, name: 'RTX 4090 Suprim Liquid', price: 'R$ 12.499,00', img: '/src/assets/product-media (2).png' },
+    { id: 2, name: 'Teclado Mecânico Pro', price: 'R$ 899,00', img: '/src/assets/product-media (3).png' },
+    { id: 3, name: 'Cooler Fan RGB 120mm', price: 'R$ 149,00', img: '/src/assets/image-container (1).png' },
 ];
 
 export default function BestSellers() {
@@ -22,7 +22,7 @@ export default function BestSellers() {
                 {bestSellers.map((prod) => (
                     <div key={prod.id} className="bg-[#141414] border border-gray-800 rounded-xl p-4 group cursor-pointer hover:border-purple-500/50 transition">
                         <div className="bg-[#0a0a0a] rounded-lg mb-4 p-4 flex justify-center">
-                            <img src={prod.img} alt={prod.name} className="h-40 object-contain group-hover:scale-105 transition" />
+                            <img src={prod.img} alt={prod.name} className="h-50 object-contain group-hover:scale-105 transition rounded-xl" />
                         </div>
                         <div className="flex justify-between items-end">
                             <div>
