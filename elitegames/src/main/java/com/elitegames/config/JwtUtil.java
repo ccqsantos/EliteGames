@@ -30,14 +30,8 @@ public class JwtUtil {
         );
     }
 
-    public String generateToken(
-            String email,
-            String userId,
-            String role
-    ) {
-
+    public String generateToken(String email, Long userId, String role) {
         Map<String, Object> claims = new HashMap<>();
-
         claims.put("userId", userId);
         claims.put("role", role);
 
@@ -45,15 +39,8 @@ public class JwtUtil {
                 .setClaims(claims)
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(
-                        new Date(
-                                System.currentTimeMillis() + expiration
-                        )
-                )
-                .signWith(
-                        getSigningKey(),
-                        SignatureAlgorithm.HS256
-                )
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 

@@ -17,13 +17,12 @@ public class OrderService {
     private final ProductService productService;
 
     @Transactional
-    public Order create(Product productService, User client) {
+    public Order create(Product product, User client) {
         Order order = Order.builder()
-                .service(productService)  // 🔧 Use .service() não .freelanceService()
+                .service(product)
                 .client(client)
                 .status(OrderStatus.PENDING)
-                .totalAmount(productService.getPrice())
-                .expectedDelivery(LocalDateTime.now().plusDays(ProductService.getDeliveryTimeDays()))
+                .totalAmount(product.getPrice())
                 .build();
 
         return repository.save(order);
@@ -37,36 +36,18 @@ public class OrderService {
     @Transactional
     public Order updateStatus(Long orderId, OrderStatus status) {
         Order order = getById(orderId);
-        validateStatusTransition(order.getStatus(), status, order);
+        validateStatusTransition(order.getStatus(), status);
         order.setStatus(status);
 
         if (status == OrderStatus.IN_PROGRESS && order.getStartedAt() == null) {
             order.setStartedAt(LocalDateTime.now());
         }
-
         if (status == OrderStatus.DELIVERED && order.getDeliveredAt() == null) {
             order.setDeliveredAt(LocalDateTime.now());
         }
-
         if (status == OrderStatus.COMPLETED && order.getCompletedAt() == null) {
             order.setCompletedAt(LocalDateTime.now());
         }
-
-        return repository.save(order);
-    }
-
-    @Transactional
-    public Order deliverOrder(Long orderId, String message, String fileUrl) {
-        Order order = getById(orderId);
-
-        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.IN_PROGRESS) {
-            throw new RuntimeException("Este pedido não pode ser entregue. Status atual: " + order.getStatus());
-        }
-
-        order.setStatus(OrderStatus.DELIVERED);
-        order.setDeliveryMessage(message);
-        order.setDeliveryFileUrl(fileUrl);
-        order.setDeliveredAt(LocalDateTime.now());
 
         return repository.save(order);
     }
@@ -78,7 +59,6 @@ public class OrderService {
         if (order.getStatus() != OrderStatus.DELIVERED) {
             throw new RuntimeException("Apenas pedidos entregues podem ser avaliados. Status atual: " + order.getStatus());
         }
-
         if (rating == null || rating < 1 || rating > 5) {
             throw new RuntimeException("Avaliação deve ser entre 1 e 5 estrelas.");
         }
@@ -88,22 +68,17 @@ public class OrderService {
         order.setStatus(OrderStatus.COMPLETED);
         order.setCompletedAt(LocalDateTime.now());
 
-        Order savedOrder = repository.save(order);
-
-        // 🔧 Use getService() não getFreelanceService()
-        updateServiceAverageRating(order.getService().getId());
-
-        return savedOrder;
+        Order saved = repository.save(order);
+        updateProductAverageRating(order.getService().getId());
+        return saved;
     }
 
     @Transactional
     public Order cancelOrder(Long orderId) {
         Order order = getById(orderId);
-
         if (order.getStatus() != OrderStatus.PENDING) {
             throw new RuntimeException("Apenas pedidos com status PENDING podem ser cancelados. Status atual: " + order.getStatus());
         }
-
         order.setStatus(OrderStatus.CANCELED);
         return repository.save(order);
     }
@@ -112,8 +87,8 @@ public class OrderService {
         return repository.findByClientId(clientId);
     }
 
-    public List<Order> findByFreelancerId(Long freelancerId) {
-        return repository.findByServiceFreelancerId(freelancerId);
+    public List<Order> findBySellerUserId(Long sellerUserId) {
+        return repository.findByServiceSellerUserId(sellerUserId);
     }
 
     @Transactional
@@ -121,33 +96,27 @@ public class OrderService {
         return repository.save(order);
     }
 
-    private void validateStatusTransition(OrderStatus current, OrderStatus next, Order order) {
+    private void validateStatusTransition(OrderStatus current, OrderStatus next) {
         if (current == OrderStatus.PENDING) {
             if (next != OrderStatus.IN_PROGRESS && next != OrderStatus.CANCELED) {
-                throw new RuntimeException("Status inválido: De PENDING só pode ir para IN_PROGRESS ou CANCELLED");
+                throw new RuntimeException("Status inválido: de PENDING só pode ir para IN_PROGRESS ou CANCELED");
             }
-        }
-        else if (current == OrderStatus.IN_PROGRESS) {
+        } else if (current == OrderStatus.IN_PROGRESS) {
             if (next != OrderStatus.DELIVERED) {
-                throw new RuntimeException("Status inválido: De IN_PROGRESS só pode ir para DELIVERED");
+                throw new RuntimeException("Status inválido: de IN_PROGRESS só pode ir para DELIVERED");
             }
-        }
-        else if (current == OrderStatus.DELIVERED) {
+        } else if (current == OrderStatus.DELIVERED) {
             if (next != OrderStatus.COMPLETED && next != OrderStatus.DISPUTED) {
-                throw new RuntimeException("Status inválido: De DELIVERED só pode ir para COMPLETED ou DISPUTED");
+                throw new RuntimeException("Status inválido: de DELIVERED só pode ir para COMPLETED ou DISPUTED");
             }
-        }
-        else if (current == OrderStatus.COMPLETED || current == OrderStatus.CANCELED) {
+        } else if (current == OrderStatus.COMPLETED || current == OrderStatus.CANCELED) {
             throw new RuntimeException("Pedidos concluídos ou cancelados não podem ter status alterado");
         }
     }
 
-    private void updateServiceAverageRating(Long serviceId) {
-        List<Order> completedOrders = repository.findByServiceIdAndStatus(serviceId, OrderStatus.COMPLETED);
-
-        if (completedOrders.isEmpty()) {
-            return;
-        }
+    private void updateProductAverageRating(Long productId) {
+        List<Order> completedOrders = repository.findByServiceIdAndStatus(productId, OrderStatus.COMPLETED);
+        if (completedOrders.isEmpty()) return;
 
         double average = completedOrders.stream()
                 .filter(o -> o.getClientRating() != null)
@@ -155,9 +124,9 @@ public class OrderService {
                 .average()
                 .orElse(0.0);
 
-        ProductService productService = productService.getById(serviceId);
-        productService.setAverageRating(Math.round(average * 10) / 10.0);
-        productService.setOrdersCompleted(completedOrders.size());
-        productService.save(productService);
+        Product product = productService.getById(productId);
+        product.setAverageRating(Math.round(average * 10) / 10.0);
+        product.setOrdersCompleted(completedOrders.size());
+        productService.save(product);
     }
 }

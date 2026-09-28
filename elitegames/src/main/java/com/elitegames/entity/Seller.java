@@ -1,30 +1,51 @@
 package com.elitegames.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name = "seller")
-public class Seller extends User {
+public class Seller {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "user_id", unique = true, nullable = false)
+    @JsonBackReference
+    private User user;
+
+    @Column(nullable = false)
     private String storeName;
+
+    @Column(unique = true)
     private String storeSlug;
+
     private String taxId;
+
     private String bankAccount;
 
     @Enumerated(EnumType.STRING)
-    private SellerStatus status;
+    @Builder.Default
+    private SellerStatus status = SellerStatus.PENDING;
 
-    private BigDecimal commissionRate;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
     private LocalDateTime approvedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        if (status == null) status = SellerStatus.PENDING;
+    }
 }

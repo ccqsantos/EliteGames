@@ -1,6 +1,7 @@
 package com.elitegames.entity;
 
 public enum Role {
-    STORE,
+    ADMIN,
+    SELLER,
     CUSTOMER
 }

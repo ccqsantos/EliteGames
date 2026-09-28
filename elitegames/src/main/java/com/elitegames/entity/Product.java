@@ -2,11 +2,12 @@ package com.elitegames.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "services")
+@Table(name = "products")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,17 +31,16 @@ public class Product {
     @Column(nullable = false)
     private String category;
 
-    @Column(name = "delivery_time_days")
-    private Integer deliveryTimeDays;
+    private Integer stock;
 
     @ElementCollection
-    @CollectionTable(name = "service_skills", joinColumns = @JoinColumn(name = "service_id"))
-    @Column(name = "skill")
-    private List<String> skills;
+    @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "image_url")
+    private List<String> images;
 
     @ManyToOne
-    @JoinColumn(name = "freelancer_id", nullable = false)
-    private User freelancer;
+    @JoinColumn(name = "seller_id", nullable = false)
+    private Seller seller;
 
     @Column(name = "orders_completed")
     private Integer ordersCompleted;
@@ -60,6 +60,7 @@ public class Product {
         updatedAt = LocalDateTime.now();
         if (ordersCompleted == null) ordersCompleted = 0;
         if (averageRating == null) averageRating = 0.0;
+        if (stock == null) stock = 0;
     }
 
     @PreUpdate
