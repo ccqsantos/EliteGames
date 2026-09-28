@@ -54,39 +54,12 @@ public class SecurityConfig {
 
                 // AUTHORIZATION
                 .authorizeHttpRequests(auth -> auth
-
-                        // PUBLIC ROUTES
-                        .requestMatchers(
-                                "/auth/**",
-                                "/h2-console/**"
-                        ).permitAll()
-
-                        // PROFILE
-                        .requestMatchers(
-                                "/profile/**"
-                        ).authenticated()
-
-                        // FREELANCER PREFERENCES
-                        .requestMatchers(
-                                "/freelancer-preferences/**"
-                        ).authenticated()
-
-                        // CLIENT PREFERENCES
-                        .requestMatchers(
-                                "/client-preferences/**"
-                        ).authenticated()
-
-                        // SERVICES
-                        .requestMatchers(
-                                "/services/**"
-                        ).permitAll()
-
-                        // ORDERS
-                        .requestMatchers(
-                                "/orders/**"
-                        ).authenticated()
-
-                        // EVERYTHING ELSE
+                        .requestMatchers("/auth/**", "/h2-console/**").permitAll()
+                        .requestMatchers("/profile/**").authenticated()
+                        .requestMatchers("/seller/register", "/seller/me").authenticated()
+                        .requestMatchers("/seller/*/approve", "/seller/*/reject").authenticated()
+                        .requestMatchers("/products/**").permitAll()
+                        .requestMatchers("/orders/**").authenticated()
                         .anyRequest().permitAll()
                 )
 
