@@ -57,10 +57,10 @@ public class OrderService {
         Order order = getById(orderId);
 
         if (order.getStatus() != OrderStatus.DELIVERED) {
-            throw new RuntimeException("Apenas pedidos entregues podem ser avaliados. Status atual: " + order.getStatus());
+            throw new IllegalArgumentException("Apenas pedidos entregues podem ser avaliados. Status atual: " + order.getStatus());
         }
         if (rating == null || rating < 1 || rating > 5) {
-            throw new RuntimeException("Avaliação deve ser entre 1 e 5 estrelas.");
+            throw new IllegalArgumentException("Avaliação deve ser entre 1 e 5 estrelas.");
         }
 
         order.setClientRating(rating);
@@ -96,6 +96,7 @@ public class OrderService {
         return repository.save(order);
     }
 
+    //metodo interno - n precisa de teste
     private void validateStatusTransition(OrderStatus current, OrderStatus next) {
         if (current == OrderStatus.PENDING) {
             if (next != OrderStatus.IN_PROGRESS && next != OrderStatus.CANCELED) {
