@@ -3,6 +3,7 @@ package com.elitegames.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Builder
+@SuperBuilder
 @Getter
 @Setter
 @NoArgsConstructor
