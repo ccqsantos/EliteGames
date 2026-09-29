@@ -17,22 +17,28 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "customer", indexes = @Index(columnList = "email", unique = true))
-public class Customer extends User{
+@Table(name = "customer")
+public class Customer extends User {
     private String firstName;
     private String lastName;
     private String phone;
 
+    @Transient
     private List<Address> addresses;
 
+    @Transient
     private Cart cart;
 
+    @Builder.Default
     private boolean emailOnOrderUpdates = true;
+    @Builder.Default
     private boolean emailOnPromotions = false;
+    @Builder.Default
     private boolean smsOnShipping = false;
 
-    // Marketing
+    @Builder.Default
     private boolean acceptsMarketing = false;
 
+    @Transient
     private JsonNode buildProfile;
 }
