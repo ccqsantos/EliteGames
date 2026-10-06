@@ -1,955 +1,411 @@
 import React, { useEffect, useState } from 'react';
-
+import { Link, useNavigate } from 'react-router-dom';
 import {
-    BsCameraFill,
     BsPencil,
     BsSave,
     BsX,
-    BsGrid,  // Ícone para serviços
+    BsCameraFill,
+    BsBoxSeam,
+    BsReceipt,
+    BsShop,
+    BsPersonCircle,
+    BsTrash,
 } from 'react-icons/bs';
-
-import axios from 'axios';
-
+import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 import '../css/Profile.css';
 
-import {
-    Link,
-    useNavigate
-} from "react-router-dom";
-
-const API_URL = "http://localhost:8080";
-
 const Profile = () => {
-
     const navigate = useNavigate();
-
-    const [isLoggedIn, setIsLoggedIn] = useState(
-        !!localStorage.getItem("token")
-    );
-
-    const [isEditing, setIsEditing] = useState(false);
+    const { logout, updateUser } = useAuth();
 
     const [userData, setUserData] = useState(null);
-
-    const [preferences, setPreferences] = useState(null);
-
-    const [preferencesRoute, setPreferencesRoute] =
-        useState("/preferences");
+    const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const [photoVersion, setPhotoVersion] = useState(Date.now()); // cache-busting
 
     const [editFormData, setEditFormData] = useState({
-        fullName: '',
-        email: ''
+        name: '',
+        email: '',
     });
 
-    const [successMessage, setSuccessMessage] = useState('');
-
     useEffect(() => {
-
         loadProfile();
-
     }, []);
 
-    const hasPreferencesData = (prefs) => {
-
-        if (!prefs) {
-            return false;
-        }
-
-        return Object.values(prefs).some(
-            value =>
-                value !== null &&
-                value !== undefined &&
-                value !== ''
-        );
-    };
-
     const loadProfile = async () => {
-
         try {
-
-            const token = localStorage.getItem("token");
-
-            if (!token) {
-
-                setIsLoggedIn(false);
-
-                return;
-            }
-
-            // PROFILE
-
-            const profileResponse = await axios.get(
-                `${API_URL}/profile`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
+            setLoading(true);
+            const { data } = await api.get('/profile');
+            setUserData(data);
+            setEditFormData({ name: data.name || '', email: data.email || '' });
+        } catch (err) {
+            console.error(err);
+            showError(
+                err.response?.data || 'Erro ao carregar o perfil.'
             );
-
-            const user = profileResponse.data;
-
-            const formattedUser = {
-                id: user.id,
-                fullName: user.name,
-                email: user.email,
-                userType: user.role,
-                memberSince: user.createdAt,
-                profilePhoto: user.profilePhoto
-            };
-
-            setUserData(formattedUser);
-
-            setEditFormData({
-                fullName: formattedUser.fullName,
-                email: formattedUser.email
-            });
-
-            // ROLE CONFIG
-
-            const isFreelancer =
-                user.role === "FREELANCER";
-
-            const route = isFreelancer
-                ? "/freelancer-preferences"
-                : "/client-preferences";
-
-            const endpoint = isFreelancer
-                ? "/freelancer-preferences"
-                : "/client-preferences";
-
-            setPreferencesRoute(route);
-
-            // PREFERENCES
-
-            try {
-
-                const preferencesResponse = await axios.get(
-                    `${API_URL}${endpoint}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    }
-                );
-
-                const preferenceData =
-                    preferencesResponse.data;
-
-                if (isFreelancer) {
-
-                    setPreferences({
-                        professionalArea:
-                        preferenceData.professionalArea,
-
-                        averagePrice:
-                        preferenceData.averageServicePrice,
-
-                        experienceLevel:
-                        preferenceData.yearsOfExperience,
-
-                        workMode:
-                        preferenceData.availability,
-
-                        description:
-                        preferenceData.description,
-
-                        portfolioLink:
-                        preferenceData.portfolioLink,
-
-                        category:
-                        preferenceData.category,
-
-                        skills:
-                        preferenceData.skills
-                    });
-
-                } else {
-
-                    setPreferences({
-                        companyName:
-                        preferenceData.companyName,
-
-                        companyDescription:
-                        preferenceData.companyDescription,
-
-                        hiringArea:
-                        preferenceData.hiringArea,
-
-                        budgetRange:
-                        preferenceData.budgetRange,
-
-                        preferredSkills:
-                        preferenceData.preferredSkills,
-
-                        projectType:
-                        preferenceData.projectType,
-
-                        workMode:
-                        preferenceData.workMode,
-
-                        companyWebsite:
-                        preferenceData.companyWebsite
-                    });
-                }
-
-            } catch (preferencesError) {
-
-                console.log(
-                    "Erro ao carregar preferências:"
-                );
-
-                console.log(preferencesError);
-
-                setPreferences(null);
-            }
-
-            setIsLoggedIn(true);
-
-        } catch (error) {
-
-            console.log(error);
-
-            localStorage.removeItem("token");
-
-            setIsLoggedIn(false);
+        } finally {
+            setLoading(false);
         }
     };
+
+    const showSuccess = (msg) => {
+        setSuccessMessage(msg);
+        setTimeout(() => setSuccessMessage(''), 3000);
+    };
+
+    const showError = (msg) => {
+        setErrorMessage(msg);
+        setTimeout(() => setErrorMessage(''), 3000);
+    };
+
+    // ---------- Edição ----------
 
     const handleEditChange = (e) => {
-
         const { name, value } = e.target;
-
-        setEditFormData({
-            ...editFormData,
-            [name]: value
-        });
+        setEditFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSaveEdit = async () => {
-
         try {
-
-            const token = localStorage.getItem("token");
-
             const payload = {
-                name: editFormData.fullName,
-                email: editFormData.email
+                name: editFormData.name,
+                email: editFormData.email,
             };
 
-            await axios.put(
-                `${API_URL}/profile`,
-                payload,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
-            );
+            const { data } = await api.put('/profile', payload);
 
-            setUserData({
-                ...userData,
-                fullName: editFormData.fullName,
-                email: editFormData.email
-            });
+            // Se o e-mail mudou, o backend retorna { message, token, user }
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+                setUserData(data.user);
+                updateUser?.(data.user);
+                showSuccess('Perfil atualizado. Sessão renovada.');
+            } else {
+                // Retornou o User direto
+                setUserData(data);
+                updateUser?.(data);
+                showSuccess('Perfil atualizado com sucesso!');
+            }
 
             setIsEditing(false);
-
-            showSuccessMessage(
-                "Perfil atualizado com sucesso!"
-            );
-
-        } catch (error) {
-
-            console.log(error);
+        } catch (err) {
+            console.error(err);
+            showError(err.response?.data || 'Erro ao atualizar o perfil.');
         }
     };
 
     const handleCancelEdit = () => {
-
         setEditFormData({
-            fullName: userData.fullName,
-            email: userData.email
+            name: userData.name || '',
+            email: userData.email || '',
         });
-
         setIsEditing(false);
     };
 
-    const handlePhotoSelect = (e) => {
+    // ---------- Foto ----------
 
-        const file = e.target.files[0];
+    const handlePhotoSelect = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-        if (!file) {
-            return;
-        }
-
-        handlePhotoUpload(file);
-    };
-
-    const handlePhotoUpload = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
 
         try {
-
-            const token = localStorage.getItem("token");
-
-            const formData = new FormData();
-
-            formData.append("photo", file);
-
-            const response = await axios.post(
-                `${API_URL}/profile/photo`,
-                formData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "multipart/form-data"
-                    }
-                }
-            );
-
-            setUserData({
-                ...userData,
-                profilePhoto:
-                response.data.profilePhoto
+            await api.post('/profile/upload-photo', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
             });
-
-            showSuccessMessage(
-                "Foto de perfil atualizada!"
-            );
-
-        } catch (error) {
-
-            console.log(error);
+            // Força o browser a buscar a nova foto
+            setPhotoVersion(Date.now());
+            showSuccess('Foto atualizada com sucesso!');
+        } catch (err) {
+            console.error(err);
+            showError(err.response?.data || 'Erro ao enviar a foto.');
         }
     };
 
-    const showSuccessMessage = (message) => {
+    const profilePhotoUrl = userData?.profileImage
+        ? `http://localhost:8080/profile/photo?v=${photoVersion}`
+        : null;
 
-        setSuccessMessage(message);
-
-        setTimeout(() => {
-
-            setSuccessMessage('');
-
-        }, 3000);
-    };
+    // ---------- Ações ----------
 
     const handleLogout = () => {
-
-        localStorage.removeItem("token");
-
-        setUserData(null);
-
-        setPreferences(null);
-
-        setIsLoggedIn(false);
-
-        window.location.href = "/login";
+        logout();
+        navigate('/login');
     };
 
-    // Função para navegar para a página de serviços
-    const goToServices = () => {
-        navigate("/services");
+    const handleDeleteAccount = async () => {
+        const confirm = window.confirm(
+            'Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita.'
+        );
+        if (!confirm) return;
+
+        try {
+            await api.delete('/profile');
+            logout();
+            navigate('/login');
+        } catch (err) {
+            console.error(err);
+            showError(err.response?.data || 'Erro ao excluir a conta.');
+        }
     };
 
-    if (!isLoggedIn || !userData) {
+    // ---------- Helpers ----------
 
+    const getInitials = (name) => {
+        if (!name) return '?';
+        return name
+            .trim()
+            .split(' ')
+            .filter(Boolean)
+            .map((w) => w[0])
+            .slice(0, 2)
+            .join('')
+            .toUpperCase();
+    };
+
+    const getRoleLabel = (role) => {
+        if (role === 'SELLER') return 'Vendedor';
+        if (role === 'CUSTOMER') return 'Cliente';
+        return 'Usuário';
+    };
+
+    const formatDate = (date) => {
+        if (!date) return '—';
+        try {
+            return new Date(date).toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+            });
+        } catch {
+            return '—';
+        }
+    };
+
+    // ---------- Render ----------
+
+    if (loading) {
         return (
-
             <div className="profile-page">
-
-                <div className="profile-not-logged">
-
-                    <div className="not-logged-card">
-
-                        <h2>
-                            Você não está logado
-                        </h2>
-
-                        <button
-                            className="btn-primary"
-                            onClick={() =>
-                                window.location.href =
-                                    "/login"
-                            }
-                        >
-                            Fazer Login
-                        </button>
-
-                    </div>
-
+                <div className="profile-card">
+                    <p>Carregando perfil...</p>
                 </div>
-
             </div>
         );
     }
 
-    return (
-
-        <div className="profile-page">
-
-            {successMessage && (
-
-                <div className="success-message">
-                    {successMessage}
+    if (!userData) {
+        return (
+            <div className="profile-page">
+                <div className="profile-not-logged">
+                    <div className="not-logged-card">
+                        <BsPersonCircle size={48} />
+                        <h2>Você não está logado</h2>
+                        <button
+                            className="btn-primary"
+                            onClick={() => navigate('/login')}
+                        >
+                            Fazer Login
+                        </button>
+                    </div>
                 </div>
+            </div>
+        );
+    }
 
+    const isSeller = userData.role === 'SELLER';
+
+    return (
+        <div className="profile-page">
+            {successMessage && (
+                <div className="success-message">{successMessage}</div>
+            )}
+            {errorMessage && (
+                <div className="error-message api-error">{errorMessage}</div>
             )}
 
             <div className="profile-card">
-
                 {/* HEADER */}
-
                 <div className="profile-header">
-
                     <div className="profile-avatar-container">
-
-                        {userData.profilePhoto ? (
-
+                        {profilePhotoUrl ? (
                             <img
-                                src={
-                                    `data:image/jpeg;base64,${userData.profilePhoto}`
-                                }
+                                src={profilePhotoUrl}
                                 alt="Foto de perfil"
                                 className="profile-avatar-image"
                             />
-
                         ) : (
-
-                            <div className="profile-avatar">
-                                👤
+                            <div
+                                className="profile-avatar"
+                                style={{
+                                    backgroundColor: isSeller ? '#6d28d9' : '#7c3aed',
+                                }}
+                            >
+                                {getInitials(userData.name)}
                             </div>
-
                         )}
 
-                        <label
-                            className="upload-photo-button"
-                        >
-                            <BsCameraFill className="photo-icon"/>
-
+                        <label className="upload-photo-button" title="Trocar foto">
+                            <BsCameraFill className="photo-icon" />
                             <input
                                 type="file"
                                 accept="image/*"
-                                className="upload-photo-icon"
                                 onChange={handlePhotoSelect}
                                 hidden
                             />
-
                         </label>
-
                     </div>
 
                     <div>
-
-                        <h1>
-                            {userData.fullName}
-                        </h1>
-
-                        <p>
-                            {userData.userType === 'FREELANCER' ? '💼 Freelancer' : '🏢 Cliente'}
+                        <h1>{userData.name || 'Usuário'}</h1>
+                        <p className="profile-role-line">
+                            {isSeller ? '🏪 Vendedor' : '🛒 Cliente'}
                         </p>
-
-                        <p>
-                            Membro desde {
-                            new Date(
-                                userData.memberSince
-                            ).toLocaleDateString(
-                                'pt-BR'
-                            )
-                        }
-                        </p>
-
+                        {userData.createdAt && (
+                            <p className="profile-since">
+                                Membro desde {formatDate(userData.createdAt)}
+                            </p>
+                        )}
                     </div>
-
                 </div>
 
-                {/* ACCOUNT SECTION */}
-
+                {/* INFORMAÇÕES DA CONTA */}
                 <div className="profile-content">
-
                     <div className="section-header">
-
-                        <h2>
-                            Informações da Conta
-                        </h2>
-
+                        <h2>Informações da Conta</h2>
                         {!isEditing && (
-
                             <button
                                 className="btn-edit"
-                                onClick={() =>
-                                    setIsEditing(true)
-                                }
+                                onClick={() => setIsEditing(true)}
                             >
-                                <BsPencil />
-                                Editar
+                                <BsPencil /> Editar
                             </button>
-
                         )}
-
                     </div>
 
                     {isEditing ? (
-
                         <div className="edit-form">
-
                             <div className="form-group">
-
-                                <label>
-                                    Nome completo
-                                </label>
-
+                                <label>Nome completo</label>
                                 <input
                                     type="text"
-                                    name="fullName"
-                                    value={
-                                        editFormData.fullName
-                                    }
-                                    onChange={
-                                        handleEditChange
-                                    }
+                                    name="name"
+                                    value={editFormData.name}
+                                    onChange={handleEditChange}
                                 />
-
                             </div>
 
                             <div className="form-group">
-
-                                <label>
-                                    Email
-                                </label>
-
+                                <label>E-mail</label>
                                 <input
                                     type="email"
                                     name="email"
-                                    value={
-                                        editFormData.email
-                                    }
-                                    onChange={
-                                        handleEditChange
-                                    }
+                                    value={editFormData.email}
+                                    onChange={handleEditChange}
                                 />
-
                             </div>
 
                             <div className="edit-actions">
-
-                                <button
-                                    className="btn-save"
-                                    onClick={
-                                        handleSaveEdit
-                                    }
-                                >
-                                    <BsSave />
-                                    Salvar
+                                <button className="btn-save" onClick={handleSaveEdit}>
+                                    <BsSave /> Salvar
                                 </button>
-
-                                <button
-                                    className="btn-cancel"
-                                    onClick={
-                                        handleCancelEdit
-                                    }
-                                >
-                                    <BsX />
-                                    Cancelar
+                                <button className="btn-cancel" onClick={handleCancelEdit}>
+                                    <BsX /> Cancelar
                                 </button>
-
                             </div>
-
                         </div>
-
                     ) : (
-
                         <div className="profile-details">
-
                             <div className="detail-row">
-
-                                <span className="detail-label">
-                                    Nome:
-                                </span>
-
-                                <span className="detail-value">
-                                    {userData.fullName}
-                                </span>
-
+                                <span className="detail-label">Nome:</span>
+                                <span className="detail-value">{userData.name}</span>
                             </div>
-
                             <div className="detail-row">
-
-                                <span className="detail-label">
-                                    Email:
-                                </span>
-
-                                <span className="detail-value">
-                                    {userData.email}
-                                </span>
-
+                                <span className="detail-label">E-mail:</span>
+                                <span className="detail-value">{userData.email}</span>
                             </div>
-
                             <div className="detail-row">
-
-                                <span className="detail-label">
-                                    Tipo:
-                                </span>
-
+                                <span className="detail-label">Tipo:</span>
                                 <span className="detail-value">
-                                    {userData.userType === 'FREELANCER' ? 'Freelancer' : 'Cliente'}
+                                    {getRoleLabel(userData.role)}
                                 </span>
-
                             </div>
-
                         </div>
-
                     )}
-
                 </div>
 
-                {/* PREFERENCES */}
-
+                {/* AÇÕES POR ROLE */}
                 <div className="profile-content">
-
                     <div className="section-header">
-
-                        <h2>
-                            Preferências
-                        </h2>
-
+                        <h2>{isSeller ? 'Minha Loja' : 'Minhas Compras'}</h2>
                     </div>
 
-                    {hasPreferencesData(preferences) ? (
-
-                        <div className="profile-details">
-
-                            {userData.userType === "FREELANCER" ? (
-
-                                <>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Área:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.professionalArea
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Valor médio:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.averagePrice
-                                                    ? `R$ ${preferences.averagePrice}`
-                                                    : "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Experiência:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.experienceLevel
-                                                    ? `${preferences.experienceLevel} anos`
-                                                    : "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Disponibilidade:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.workMode
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Skills:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.skills
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Categoria:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.category
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Portfólio:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.portfolioLink
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Descrição:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.description
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                </>
-
-                            ) : (
-
-                                <>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Empresa:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.companyName
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Descrição da empresa:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.companyDescription
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Área de contratação:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.hiringArea
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Faixa de orçamento:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.budgetRange
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Skills desejadas:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.preferredSkills
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Tipo de projeto:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.projectType
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Modalidade:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.workMode
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="detail-row">
-
-                                        <span className="detail-label">
-                                            Website:
-                                        </span>
-
-                                        <span className="detail-value">
-                                            {
-                                                preferences.companyWebsite
-                                                || "Não informado"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                </>
-
-                            )}
-
-                            <Link to={preferencesRoute}>
-
-                                <button className="btn-edit">
-                                    Editar Preferências
-                                </button>
-
+                    {isSeller ? (
+                        <div className="role-actions">
+                            <Link to="/seller/products" className="role-card">
+                                <BsBoxSeam size={24} />
+                                <div>
+                                    <h3>Meus Produtos</h3>
+                                    <p>Gerencie seus anúncios e estoque.</p>
+                                </div>
                             </Link>
 
-                        </div>
+                            <Link to="/orders/received" className="role-card">
+                                <BsReceipt size={24} />
+                                <div>
+                                    <h3>Pedidos Recebidos</h3>
+                                    <p>Veja e atualize os pedidos dos clientes.</p>
+                                </div>
+                            </Link>
 
+                            <Link to="/seller/new-product" className="role-card">
+                                <BsShop size={24} />
+                                <div>
+                                    <h3>Anunciar Produto</h3>
+                                    <p>Cadastre um novo produto na loja.</p>
+                                </div>
+                            </Link>
+                        </div>
                     ) : (
-
-                        <div className="empty-preferences">
-
-                            <p>
-                                Você ainda não cadastrou
-                                suas preferências.
-                            </p>
-
-                            <Link to={preferencesRoute}>
-
-                                <button className="btn-edit">
-                                    Configurar Preferências
-                                </button>
-
+                        <div className="role-actions">
+                            <Link to="/orders/my" className="role-card">
+                                <BsReceipt size={24} />
+                                <div>
+                                    <h3>Meus Pedidos</h3>
+                                    <p>Acompanhe suas compras e avaliações.</p>
+                                </div>
                             </Link>
 
+                            <Link to="/shop" className="role-card">
+                                <BsShop size={24} />
+                                <div>
+                                    <h3>Ir às Compras</h3>
+                                    <p>Explore GPUs, periféricos e mais.</p>
+                                </div>
+                            </Link>
                         </div>
-
                     )}
-
                 </div>
-
-                {/* 🆕 SEÇÃO DE SERVIÇOS PARA FREELANCER */}
-
-                {userData.userType === "FREELANCER" && (
-                    <div className="profile-content services-section">
-                        <div className="section-header">
-                            <h2>Meus Serviços</h2>
-                        </div>
-
-                        <div className="services-card">
-                            <div className="services-icon">📦</div>
-                            <div className="services-info">
-                                <h3>Gerencie seus serviços</h3>
-                                <p>
-                                    Crie e gerencie os serviços que você oferece para os clientes.
-                                    Quanto mais serviços você criar, mais chances de conseguir novos contratos!
-                                </p>
-                            </div>
-                            <button
-                                className="btn-services"
-                                onClick={goToServices}
-                            >
-                                <BsGrid /> Ir para Meus Serviços
-                            </button>
-                        </div>
-                    </div>
-                )}
 
                 {/* ACTIONS */}
-
                 <div className="profile-actions">
-
                     <button
-                        className="btn-logout"
-                        onClick={handleLogout}
+                        className="btn-delete"
+                        onClick={handleDeleteAccount}
+                        title="Excluir conta"
                     >
+                        <BsTrash /> Excluir Conta
+                    </button>
+                    <button className="btn-logout" onClick={handleLogout}>
                         Sair
                     </button>
-
                 </div>
-
             </div>
-
         </div>
     );
 };

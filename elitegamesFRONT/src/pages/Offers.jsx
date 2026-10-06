@@ -15,7 +15,7 @@ export default function Offers() {
             setLoading(true);
             setError(null);
             try {
-                const res = await fetch(`${API_URL}/api/public/offers?sort=${sort}`, {
+                const res = await fetch(`${API_URL}/offers?sort=${sort}`, {
                     signal: controller.signal,
                     headers: { Accept: 'application/json' },
                 });

@@ -1,83 +1,71 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import api from '../services/api';
 
-const API_URL = "http://localhost:8080";
 const AuthContext = createContext({});
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
-        throw new Error("useAuth must be used within an AuthProvider");
+        throw new Error('useAuth must be used within an AuthProvider');
     }
     return context;
 };
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [user, setUser] = useState(() => {
+        // Restaura o usuário do localStorage (evita flash de "não logado")
+        const cached = localStorage.getItem('user');
+        return cached ? JSON.parse(cached) : null;
+    });
+    const [token, setToken] = useState(() => localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(
+        () => !!localStorage.getItem('token')
+    );
 
-    // Configurar interceptor do axios
+    // ---------- Carrega o usuário do backend ----------
+    const loadUser = useCallback(async () => {
+        try {
+            const { data } = await api.get('/profile');
+            setUser(data);
+            localStorage.setItem('user', JSON.stringify(data));
+            setIsAuthenticated(true);
+        } catch (error) {
+            console.error('Erro ao carregar usuário:', error);
+            // Token inválido/expirado — o interceptor do api já cuida do 401
+            logout();
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // ---------- Ao montar / quando o token muda ----------
     useEffect(() => {
         if (token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             loadUser();
         } else {
             setLoading(false);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token]);
 
-    // 🔧 Buscar dados do usuário usando o endpoint /profile
-    const loadUser = async () => {
-        try {
-            const response = await axios.get(`${API_URL}/profile`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            console.log("Dados do usuário carregados do /profile:", response.data);
-
-            const userData = response.data;
-            setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
-            setIsAuthenticated(true);
-        } catch (error) {
-            console.error("Erro ao carregar usuário:", error);
-            // Se o token for inválido, faz logout
-            if (error.response?.status === 401 || error.response?.status === 403) {
-                logout();
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    // ---------- LOGIN ----------
     const login = async (email, password) => {
         try {
-            const response = await axios.post(`${API_URL}/auth/login`, {
+            // ✅ Controller retorna String (token puro)
+            const { data: newToken } = await api.post('/auth/login', {
                 email,
-                password
+                password,
             });
 
-            // Seu backend retorna apenas o token como string
-            const newToken = response.data;
-
-            console.log("Token recebido:", newToken);
-
-            // Salvar token
             localStorage.setItem('token', newToken);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-
             setToken(newToken);
 
-            // 🔧 Buscar dados do usuário após o login usando o endpoint /profile
-            const userResponse = await axios.get(`${API_URL}/profile`, {
-                headers: { Authorization: `Bearer ${newToken}` }
+            // Busca os dados do usuário com o novo token
+            const { data: userData } = await api.get('/profile', {
+                headers: { Authorization: `Bearer ${newToken}` },
             });
-
-            const userData = userResponse.data;
-            console.log("Dados do usuário após login:", userData);
 
             setUser(userData);
             localStorage.setItem('user', JSON.stringify(userData));
@@ -85,94 +73,143 @@ export const AuthProvider = ({ children }) => {
 
             return { success: true, data: userData };
         } catch (error) {
-            console.error("Erro no login:", error);
+            console.error('Erro no login:', error);
             return {
                 success: false,
-                error: error.response?.data?.message || "Erro ao fazer login"
+                // O controller retorna "E-mail ou senha inválidos." como String
+                error:
+                    error.response?.data ||
+                    error.response?.data?.message ||
+                    'Erro ao fazer login',
             };
         }
     };
 
-    const register = async (userData) => {
+    // ---------- REGISTER ----------
+    const register = async ({ name, email, password, role }) => {
         try {
-            const response = await axios.post(`${API_URL}/auth/register`, userData);
-
-            const newToken = response.data;
-
-            console.log("Registro realizado, token:", newToken);
-
-            // Salvar token
-            localStorage.setItem('token', newToken);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-
-            setToken(newToken);
-
-            // 🔧 Buscar dados do usuário após o registro
-            const userResponse = await axios.get(`${API_URL}/profile`, {
-                headers: { Authorization: `Bearer ${newToken}` }
+            // ✅ RegisterRequest espera { name, email, password, role }
+            const { data: newToken } = await api.post('/auth/register', {
+                name,
+                email,
+                password,
+                role,
             });
 
-            const newUser = userResponse.data;
-            console.log("Dados do usuário após registro:", newUser);
+            localStorage.setItem('token', newToken);
+            setToken(newToken);
 
-            setUser(newUser);
-            localStorage.setItem('user', JSON.stringify(newUser));
+            const { data: userData } = await api.get('/profile', {
+                headers: { Authorization: `Bearer ${newToken}` },
+            });
+
+            setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
             setIsAuthenticated(true);
 
-            return { success: true, data: newUser };
+            return { success: true, data: userData };
         } catch (error) {
-            console.error("Erro no registro:", error);
+            console.error('Erro no registro:', error);
             return {
                 success: false,
-                error: error.response?.data?.message || "Erro ao fazer registro"
+                error:
+                    error.response?.data ||
+                    error.response?.data?.message ||
+                    'Erro ao fazer registro',
             };
         }
     };
 
+    // ---------- LOGOUT ----------
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        delete axios.defaults.headers.common['Authorization'];
-
         setToken(null);
         setUser(null);
         setIsAuthenticated(false);
     };
 
+    // ---------- ATUALIZA O USUÁRIO LOCAL ----------
     const updateUser = (updatedUser) => {
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
     };
 
-    // 🔧 Função para atualizar o perfil do usuário
+    // ---------- UPDATE PROFILE ----------
     const updateProfile = async (profileData) => {
         try {
-            const response = await axios.put(`${API_URL}/profile`, profileData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const { data } = await api.put('/profile', profileData);
 
-            // Se o email mudou, o backend pode retornar um novo token
-            if (response.data.token) {
-                const newToken = response.data.token;
-                localStorage.setItem('token', newToken);
-                axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-                setToken(newToken);
+            // Se o e-mail mudou, o backend retorna { message, token, user }
+            let updatedUser = data;
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+                setToken(data.token);
+                updatedUser = data.user;
             }
 
-            // Atualizar dados do usuário
-            const updatedUser = response.data.user || response.data;
             setUser(updatedUser);
             localStorage.setItem('user', JSON.stringify(updatedUser));
 
             return { success: true, data: updatedUser };
         } catch (error) {
-            console.error("Erro ao atualizar perfil:", error);
+            console.error('Erro ao atualizar perfil:', error);
             return {
                 success: false,
-                error: error.response?.data?.message || "Erro ao atualizar perfil"
+                error:
+                    error.response?.data ||
+                    error.response?.data?.message ||
+                    'Erro ao atualizar perfil',
             };
         }
     };
+
+    // ---------- DELETE PROFILE ----------
+    const deleteProfile = async () => {
+        try {
+            await api.delete('/profile');
+            logout();
+            return { success: true };
+        } catch (error) {
+            console.error('Erro ao excluir conta:', error);
+            return {
+                success: false,
+                error:
+                    error.response?.data ||
+                    error.response?.data?.message ||
+                    'Erro ao excluir conta',
+            };
+        }
+    };
+
+    // ---------- UPLOAD FOTO ----------
+    const uploadProfilePhoto = async (file) => {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            await api.post('/profile/upload-photo', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            // Recarrega o usuário para refletir a foto
+            await loadUser();
+            return { success: true };
+        } catch (error) {
+            console.error('Erro ao enviar foto:', error);
+            return {
+                success: false,
+                error:
+                    error.response?.data ||
+                    'Erro ao enviar foto',
+            };
+        }
+    };
+
+    // ---------- Helpers de role ----------
+    const hasRole = (role) => user?.role === role;
+    const isCustomer = () => user?.role === 'CUSTOMER';
+    const isSeller = () => user?.role === 'SELLER';
 
     const value = {
         user,
@@ -183,10 +220,13 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         updateUser,
-        updateProfile, // Adicionando função de atualização de perfil
-        hasRole: (role) => user?.role === role,
-        isClient: () => user?.role === 'CLIENT',
-        isFreelancer: () => user?.role === 'FREELANCER'
+        updateProfile,
+        deleteProfile,
+        uploadProfilePhoto,
+        loadUser,
+        hasRole,
+        isCustomer,
+        isSeller,
     };
 
     return (
