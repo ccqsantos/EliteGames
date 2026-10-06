@@ -43,8 +43,14 @@ public class FileUploadService {
     }
 
     public boolean deleteFile(String filePath) {
+        if (filePath == null || filePath.isBlank()) {
+            return false;
+        }
         try {
-            Path path = Paths.get("." + filePath);
+            String relative = filePath.startsWith("/uploads/")
+                    ? filePath.substring("/uploads/".length())
+                    : filePath;
+            Path path = Paths.get(uploadPath).resolve(relative);
             return Files.deleteIfExists(path);
         } catch (IOException e) {
             return false;
