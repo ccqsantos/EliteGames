@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-    BsFillEyeFill,
-    BsFillEyeSlashFill
-} from "react-icons/bs";
-import {
-    Link,
-    useNavigate
-} from "react-router-dom";
+import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { authService } from "../services/authService";
 import "../css/Auth.css";
-import {FaApple, FaDiscord, FaGoogle, FaTwitch, FaYoutube} from "react-icons/fa";
+import { FaApple, FaGoogle } from "react-icons/fa";
 import logo from "../assets/elitegames_logo1_outline.png";
 
 const Login = () => {
@@ -19,59 +14,36 @@ const Login = () => {
     const [formData, setFormData] = useState({
         email: "",
         password: "",
-        rememberMe: false
+        rememberMe: false,
     });
 
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
-    // Redirecionar se já estiver autenticado
     useEffect(() => {
-        if (isAuthenticated) {
-            navigate("/");
-        }
+        if (isAuthenticated) navigate("/");
     }, [isAuthenticated, navigate]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-
         setFormData((prev) => ({
             ...prev,
-            [name]: type === "checkbox" ? checked : value
+            [name]: type === "checkbox" ? checked : value,
         }));
-
-        // Limpar erro do campo específico ao digitar
-        if (errors[name]) {
-            setErrors((prev) => ({
-                ...prev,
-                [name]: ""
-            }));
-        }
-
-        // Limpar erro da API ao digitar qualquer campo
-        if (errors.api) {
-            setErrors((prev) => ({
-                ...prev,
-                api: ""
-            }));
-        }
+        if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+        if (errors.api) setErrors((prev) => ({ ...prev, api: "" }));
     };
 
     const validateForm = () => {
         const newErrors = {};
-
-        if (!formData.email.trim()) {
-            newErrors.email = "E-mail é obrigatório";
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        if (!formData.email.trim()) newErrors.email = "E-mail é obrigatório";
+        else if (!/\S+@\S+\.\S+/.test(formData.email))
             newErrors.email = "E-mail inválido";
-        }
 
-        if (!formData.password.trim()) {
-            newErrors.password = "Senha é obrigatória";
-        } else if (formData.password.length < 6) {
+        if (!formData.password.trim()) newErrors.password = "Senha é obrigatória";
+        else if (formData.password.length < 6)
             newErrors.password = "Senha deve ter no mínimo 6 caracteres";
-        }
 
         return newErrors;
     };
@@ -80,7 +52,6 @@ const Login = () => {
         e.preventDefault();
 
         const validationErrors = validateForm();
-
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
@@ -89,22 +60,23 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const result = await login(formData.email, formData.password);
+            // ✅ Chama o backend e recebe o token (String)
+            const token = await authService.login({
+                email: formData.email,
+                password: formData.password,
+            });
 
-            if (!result.success) {
-                setErrors({
-                    api: result.error || "E-mail ou senha inválidos"
-                });
-                return;
-            }
+            // ✅ Salva o token e atualiza o contexto
+            login(token);
 
             navigate("/");
-
         } catch (error) {
-            console.error("Erro no login:", error);
-            setErrors({
-                api: error.response?.data?.message || "Erro ao realizar login. Tente novamente."
-            });
+            // O controller retorna 401 com "E-mail ou senha inválidos."
+            const message =
+                error.response?.data ||
+                error.response?.data?.message ||
+                "Erro ao realizar login. Tente novamente.";
+            setErrors({ api: message });
         } finally {
             setLoading(false);
         }
@@ -113,21 +85,26 @@ const Login = () => {
     return (
         <div className="auth-container login-container">
             <div className="auth-card join-card">
-                {/* Cabeçalho */}
                 <div className="auth-header">
                     <div className="auth-icon">
-                        <img src={logo} style={{ width: 100, height: 100 }} alt="logo EliteGames" />
+                        <img
+                            src={logo}
+                            style={{ width: 100, height: 100 }}
+                            alt="logo EliteGames"
+                        />
                     </div>
-                    <h2>Bem-vindo de <span className="highlight">volta</span></h2>
-                    <p>Entre na<span className="highlight-text">Elite</span>e continue dominando</p>
+                    <h2>
+                        Bem-vindo de <span className="highlight">volta</span>
+                    </h2>
+                    <p>
+                        Entre na <span className="highlight-text">Elite</span> e continue
+                        dominando
+                    </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="auth-form">
-                    {/* Mensagem de erro da API */}
                     {errors.api && (
-                        <div className="error-message api-error">
-                            {errors.api}
-                        </div>
+                        <div className="error-message api-error">{errors.api}</div>
                     )}
 
                     <div className="form-group">
@@ -142,7 +119,7 @@ const Login = () => {
                                 placeholder="seu@email.com"
                                 disabled={loading}
                                 autoComplete="email"
-                                className={errors.email ? 'error' : ''}
+                                className={errors.email ? "error" : ""}
                             />
                         </div>
                         {errors.email && (
@@ -162,7 +139,7 @@ const Login = () => {
                                 placeholder="••••••••"
                                 disabled={loading}
                                 autoComplete="current-password"
-                                className={errors.password ? 'error' : ''}
+                                className={errors.password ? "error" : ""}
                             />
                             <button
                                 type="button"
@@ -195,18 +172,14 @@ const Login = () => {
                         </Link>
                     </div>
 
-                    <button
-                        type="submit"
-                        className="btn-auth-primary"
-                        disabled={loading}
-                    >
+                    <button type="submit" className="btn-auth-primary" disabled={loading}>
                         {loading ? (
                             <>
                                 <span className="spinner"></span>
                                 Entrando...
                             </>
                         ) : (
-                            'Entrar na Elite'
+                            "Entrar na Elite"
                         )}
                     </button>
                 </form>
@@ -217,10 +190,10 @@ const Login = () => {
 
                 <div className="social-login">
                     <button type="button" className="btn-social" disabled={loading}>
-                        <FaGoogle size={20} />Google
+                        <FaGoogle size={20} /> Google
                     </button>
                     <button type="button" className="btn-social" disabled={loading}>
-                        <FaApple size={24} />Apple
+                        <FaApple size={24} /> Apple
                     </button>
                 </div>
 
@@ -231,9 +204,7 @@ const Login = () => {
                             Cadastre-se grátis
                         </Link>
                     </p>
-                    <p className="footer-note">
-                        ⚡ Domine o jogo com a EliteGames
-                    </p>
+                    <p className="footer-note">⚡ Domine o jogo com a EliteGames</p>
                 </div>
             </div>
         </div>
