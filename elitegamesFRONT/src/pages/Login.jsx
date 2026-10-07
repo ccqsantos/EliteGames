@@ -1,15 +1,39 @@
 import React, { useState, useEffect } from "react";
-import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
-import { Link, useNavigate } from "react-router-dom";
+import {
+    BsFillEyeFill,
+    BsFillEyeSlashFill
+} from "react-icons/bs";
+import {
+    Link,
+    useNavigate
+} from "react-router-dom";
+
 import { useAuth } from "../context/AuthContext";
-import { authService } from "../services/authService";
+
 import "../css/Auth.css";
-import { FaApple, FaGoogle } from "react-icons/fa";
+
+import {
+    FaApple,
+    FaGoogle
+} from "react-icons/fa";
+
 import logo from "../assets/elitegames_logo1_outline.png";
 
+
 const Login = () => {
+
     const navigate = useNavigate();
-    const { login, isAuthenticated } = useAuth();
+
+    const {
+        login,
+        isAuthenticated,
+        loading: authLoading
+    } = useAuth();
+
+
+    // =========================================================
+    // FORM
+    // =========================================================
 
     const [formData, setFormData] = useState({
         email: "",
@@ -18,98 +42,269 @@ const Login = () => {
     });
 
     const [showPassword, setShowPassword] = useState(false);
+
     const [errors, setErrors] = useState({});
+
     const [loading, setLoading] = useState(false);
 
+
+    // =========================================================
+    // REDIRECIONAR SE JÁ ESTIVER LOGADO
+    // =========================================================
+
     useEffect(() => {
-        if (isAuthenticated) navigate("/");
-    }, [isAuthenticated, navigate]);
+
+        if (!authLoading && isAuthenticated) {
+            navigate("/", { replace: true });
+        }
+
+    }, [
+        isAuthenticated,
+        authLoading,
+        navigate
+    ]);
+
+
+    // =========================================================
+    // INPUT
+    // =========================================================
 
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+
+        const {
+            name,
+            value,
+            type,
+            checked
+        } = e.target;
+
         setFormData((prev) => ({
             ...prev,
-            [name]: type === "checkbox" ? checked : value,
+            [name]:
+                type === "checkbox"
+                    ? checked
+                    : value,
         }));
-        if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
-        if (errors.api) setErrors((prev) => ({ ...prev, api: "" }));
+
+        if (errors[name]) {
+            setErrors((prev) => ({
+                ...prev,
+                [name]: "",
+            }));
+        }
+
+        if (errors.api) {
+            setErrors((prev) => ({
+                ...prev,
+                api: "",
+            }));
+        }
     };
 
-    const validateForm = () => {
-        const newErrors = {};
-        if (!formData.email.trim()) newErrors.email = "E-mail é obrigatório";
-        else if (!/\S+@\S+\.\S+/.test(formData.email))
-            newErrors.email = "E-mail inválido";
 
-        if (!formData.password.trim()) newErrors.password = "Senha é obrigatória";
-        else if (formData.password.length < 6)
-            newErrors.password = "Senha deve ter no mínimo 6 caracteres";
+    // =========================================================
+    // VALIDAÇÃO
+    // =========================================================
+
+    const validateForm = () => {
+
+        const newErrors = {};
+
+        if (!formData.email.trim()) {
+
+            newErrors.email =
+                "E-mail é obrigatório";
+
+        } else if (
+            !/\S+@\S+\.\S+/.test(
+                formData.email
+            )
+        ) {
+
+            newErrors.email =
+                "E-mail inválido";
+        }
+
+
+        if (!formData.password.trim()) {
+
+            newErrors.password =
+                "Senha é obrigatória";
+
+        } else if (
+            formData.password.length < 6
+        ) {
+
+            newErrors.password =
+                "Senha deve ter no mínimo 6 caracteres";
+        }
 
         return newErrors;
     };
 
+
+    // =========================================================
+    // LOGIN
+    // =========================================================
+
     const handleSubmit = async (e) => {
+
         e.preventDefault();
 
-        const validationErrors = validateForm();
-        if (Object.keys(validationErrors).length > 0) {
+        const validationErrors =
+            validateForm();
+
+        if (
+            Object.keys(validationErrors)
+                .length > 0
+        ) {
+
             setErrors(validationErrors);
             return;
         }
 
+
         setLoading(true);
 
         try {
-            // ✅ Chama o backend e recebe o token (String)
-            const token = await authService.login({
-                email: formData.email,
-                password: formData.password,
+
+            /*
+             * IMPORTANTE:
+             *
+             * NÃO chamamos authService.login()
+             * aqui.
+             *
+             * O AuthContext já faz:
+             *
+             * POST /auth/login
+             * ↓
+             * recebe JWT
+             * ↓
+             * salva JWT
+             * ↓
+             * GET /profile
+             * ↓
+             * salva usuário
+             */
+
+            const result = await login(
+                formData.email,
+                formData.password
+            );
+
+
+            if (!result.success) {
+
+                setErrors({
+                    api: result.error
+                });
+
+                return;
+            }
+
+
+            console.log(
+                "Login realizado:",
+                result.data
+            );
+
+
+            /*
+             * result.data deve ser algo como:
+             *
+             * {
+             *     id: 1,
+             *     name: "Cauã",
+             *     email: "...",
+             *     role: "CUSTOMER"
+             * }
+             */
+
+
+            navigate("/", {
+                replace: true
             });
 
-            // ✅ Salva o token e atualiza o contexto
-            login(token);
-
-            navigate("/");
         } catch (error) {
-            // O controller retorna 401 com "E-mail ou senha inválidos."
-            const message =
-                error.response?.data ||
-                error.response?.data?.message ||
-                "Erro ao realizar login. Tente novamente.";
-            setErrors({ api: message });
+
+            console.error(
+                "Erro inesperado no login:",
+                error
+            );
+
+            setErrors({
+                api:
+                    "Erro ao realizar login. Tente novamente."
+            });
+
         } finally {
+
             setLoading(false);
         }
     };
 
+
+    // =========================================================
+    // RENDER
+    // =========================================================
+
     return (
         <div className="auth-container login-container">
+
             <div className="auth-card join-card">
+
                 <div className="auth-header">
-                    <div className="auth-icon">
+
+                    <div className="auth-icon flex justify-items-center">
+
                         <img
                             src={logo}
-                            style={{ width: 100, height: 100 }}
+                            style={{
+                                width: 100,
+                                height: 100,
+                                alignSelf: "center",
+                            }}
                             alt="logo EliteGames"
                         />
+
                     </div>
-                    <h2>
-                        Bem-vindo de <span className="highlight">volta</span>
-                    </h2>
+
+                        <span className="highlight">
+                            Bem-vindo de volta
+                        </span>
+
                     <p>
-                        Entre na <span className="highlight-text">Elite</span> e continue
-                        dominando
+                        Entre na{" "}
+                        <span className="highlight-text">
+                            Elite
+                        </span>{" "}
+                        e continue dominando
                     </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="auth-form">
+
+                <form
+                    onSubmit={handleSubmit}
+                    className="auth-form"
+                >
+
                     {errors.api && (
-                        <div className="error-message api-error">{errors.api}</div>
+                        <div className="error-message api-error">
+                            {errors.api}
+                        </div>
                     )}
 
+
+                    {/* EMAIL */}
+
                     <div className="form-group">
-                        <label htmlFor="email">E-mail</label>
+
+                        <label htmlFor="email">
+                            E-mail
+                        </label>
+
                         <div className="input-icon">
+
                             <input
                                 type="email"
                                 id="email"
@@ -119,19 +314,40 @@ const Login = () => {
                                 placeholder="seu@email.com"
                                 disabled={loading}
                                 autoComplete="email"
-                                className={errors.email ? "error" : ""}
+                                className={
+                                    errors.email
+                                        ? "error"
+                                        : ""
+                                }
                             />
+
                         </div>
+
                         {errors.email && (
-                            <span className="error-message">{errors.email}</span>
+                            <span className="error-message">
+                                {errors.email}
+                            </span>
                         )}
+
                     </div>
 
+
+                    {/* SENHA */}
+
                     <div className="form-group">
-                        <label htmlFor="password">Senha</label>
+
+                        <label htmlFor="password">
+                            Senha
+                        </label>
+
                         <div className="input-icon password-input">
+
                             <input
-                                type={showPassword ? "text" : "password"}
+                                type={
+                                    showPassword
+                                        ? "text"
+                                        : "password"
+                                }
                                 id="password"
                                 name="password"
                                 value={formData.password}
@@ -139,40 +355,81 @@ const Login = () => {
                                 placeholder="••••••••"
                                 disabled={loading}
                                 autoComplete="current-password"
-                                className={errors.password ? "error" : ""}
+                                className={
+                                    errors.password
+                                        ? "error"
+                                        : ""
+                                }
                             />
+
                             <button
                                 type="button"
                                 className="password-toggle-btn"
-                                onClick={() => setShowPassword((prev) => !prev)}
+                                onClick={() =>
+                                    setShowPassword(
+                                        (prev) => !prev
+                                    )
+                                }
                                 tabIndex="-1"
                                 disabled={loading}
                             >
-                                {showPassword ? <BsFillEyeSlashFill /> : <BsFillEyeFill />}
+                                {showPassword
+                                    ? <BsFillEyeSlashFill />
+                                    : <BsFillEyeFill />
+                                }
                             </button>
+
                         </div>
+
                         {errors.password && (
-                            <span className="error-message">{errors.password}</span>
+                            <span className="error-message">
+                                {errors.password}
+                            </span>
                         )}
+
                     </div>
 
+
+                    {/* OPÇÕES */}
+
                     <div className="form-options">
+
                         <label className="checkbox-label">
+
                             <input
                                 type="checkbox"
                                 name="rememberMe"
-                                checked={formData.rememberMe}
+                                checked={
+                                    formData.rememberMe
+                                }
                                 onChange={handleChange}
                                 disabled={loading}
                             />
-                            <span>Lembrar de mim</span>
+
+                            <span>
+                                Lembrar de mim
+                            </span>
+
                         </label>
-                        <Link to="/forgot-password" className="forgot-link">
+
+                        <Link
+                            to="/forgot-password"
+                            className="forgot-link"
+                        >
                             Esqueceu a senha?
                         </Link>
+
                     </div>
 
-                    <button type="submit" className="btn-auth-primary" disabled={loading}>
+
+                    {/* BOTÃO */}
+
+                    <button
+                        type="submit"
+                        className="btn-auth-primary"
+                        disabled={loading}
+                    >
+
                         {loading ? (
                             <>
                                 <span className="spinner"></span>
@@ -181,32 +438,68 @@ const Login = () => {
                         ) : (
                             "Entrar na Elite"
                         )}
+
                     </button>
+
                 </form>
 
+
+                {/* SOCIAL */}
+
                 <div className="auth-divider">
-                    <span>ou entre com</span>
+                    <span>
+                        ou entre com
+                    </span>
                 </div>
+
 
                 <div className="social-login">
-                    <button type="button" className="btn-social" disabled={loading}>
-                        <FaGoogle size={20} /> Google
+
+                    <button
+                        type="button"
+                        className="btn-social"
+                        disabled={loading}
+                    >
+                        <FaGoogle size={20} />
+                        Google
                     </button>
-                    <button type="button" className="btn-social" disabled={loading}>
-                        <FaApple size={24} /> Apple
+
+                    <button
+                        type="button"
+                        className="btn-social"
+                        disabled={loading}
+                    >
+                        <FaApple size={24} />
+                        Apple
                     </button>
+
                 </div>
 
+
+                {/* FOOTER */}
+
                 <div className="auth-footer">
+
                     <p>
                         Não tem uma conta?{" "}
-                        <Link to="/join" className="auth-link">
+
+                        <Link
+                            to="/join"
+                            className="auth-link"
+                        >
                             Cadastre-se grátis
                         </Link>
+
                     </p>
-                    <p className="footer-note">⚡ Domine o jogo com a EliteGames</p>
+
+                    <p className="footer-note">
+                        ⚡ Domine o jogo com a EliteGames
+                    </p>
+
                 </div>
+
             </div>
+
         </div>
     );
 };
