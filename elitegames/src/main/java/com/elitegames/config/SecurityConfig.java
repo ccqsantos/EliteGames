@@ -63,7 +63,6 @@ public class SecurityConfig {
                         .requestMatchers("/seller/**").authenticated()
                         .requestMatchers("/orders/**").authenticated()
                         .anyRequest().permitAll()
-                        .anyRequest().permitAll()
                 )
 
                 // STATELESS JWT
