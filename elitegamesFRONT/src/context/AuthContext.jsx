@@ -1,193 +1,560 @@
-// src/context/AuthContext.jsx
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import React, {
+    createContext,
+    useContext,
+    useEffect,
+    useState,
+} from 'react';
 
-const API_URL = "http://localhost:8080";
-const AuthContext = createContext({});
+import api from '../services/api';
+
+const AuthContext = createContext(null);
+
+
+// =========================================================
+// HOOK
+// =========================================================
 
 export const useAuth = () => {
+
     const context = useContext(AuthContext);
+
     if (!context) {
-        throw new Error("useAuth must be used within an AuthProvider");
+        throw new Error(
+            'useAuth must be used inside AuthProvider'
+        );
     }
+
     return context;
 };
 
+
+// =========================================================
+// PROVIDER
+// =========================================================
+
 export const AuthProvider = ({ children }) => {
+
     const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [token, setToken] = useState(
+        () => localStorage.getItem('token')
+    );
+
     const [loading, setLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // Configurar interceptor do axios
-    useEffect(() => {
-        if (token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            loadUser();
+
+    // =========================================================
+    // SALVAR USUÁRIO
+    // =========================================================
+
+    const saveUser = (userData) => {
+
+        setUser(userData);
+
+        if (userData) {
+            localStorage.setItem(
+                'user',
+                JSON.stringify(userData)
+            );
         } else {
-            setLoading(false);
-        }
-    }, [token]);
-
-    // 🔧 Buscar dados do usuário usando o endpoint /profile
-    const loadUser = async () => {
-        try {
-            const response = await axios.get(`${API_URL}/profile`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            console.log("Dados do usuário carregados do /profile:", response.data);
-
-            const userData = response.data;
-            setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
-            setIsAuthenticated(true);
-        } catch (error) {
-            console.error("Erro ao carregar usuário:", error);
-            // Se o token for inválido, faz logout
-            if (error.response?.status === 401 || error.response?.status === 403) {
-                logout();
-            }
-        } finally {
-            setLoading(false);
+            localStorage.removeItem('user');
         }
     };
+
+
+    // =========================================================
+    // BUSCAR USUÁRIO LOGADO
+    // =========================================================
+
+    const fetchUser = async () => {
+
+        try {
+
+            const response = await api.get('/profile');
+
+            console.log(
+                'Usuário recebido do backend:',
+                response.data
+            );
+
+            saveUser(response.data);
+
+            return response.data;
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao buscar /profile:',
+                error.response?.data || error
+            );
+
+            throw error;
+        }
+    };
+
+
+    // =========================================================
+    // RESTAURAR LOGIN AO ABRIR A APLICAÇÃO
+    // =========================================================
+
+    useEffect(() => {
+
+        const restoreSession = async () => {
+
+            const storedToken =
+                localStorage.getItem('token');
+
+            if (!storedToken) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+
+                setToken(storedToken);
+
+                await fetchUser();
+
+            } catch (error) {
+
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+
+                setToken(null);
+                setUser(null);
+
+            } finally {
+
+                setLoading(false);
+
+            }
+        };
+
+        restoreSession();
+
+    }, []);
+
+
+    // =========================================================
+    // LOGIN
+    // =========================================================
 
     const login = async (email, password) => {
-        try {
-            const response = await axios.post(`${API_URL}/auth/login`, {
-                email,
-                password
-            });
 
-            // Seu backend retorna apenas o token como string
+        try {
+
+            console.log('Tentando fazer login...');
+
+            const response = await api.post(
+                '/auth/login',
+                {
+                    email,
+                    password,
+                }
+            );
+
+            /*
+             * Seu AuthController retorna:
+             *
+             * ResponseEntity<String>
+             *
+             * portanto response.data é diretamente o JWT.
+             */
+
             const newToken = response.data;
 
-            console.log("Token recebido:", newToken);
+            console.log(
+                'Token recebido:',
+                newToken
+            );
 
-            // Salvar token
-            localStorage.setItem('token', newToken);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+            if (!newToken) {
+
+                return {
+                    success: false,
+                    error: 'Servidor não retornou um token.',
+                };
+            }
+
+
+            // Salva token
+            localStorage.setItem(
+                'token',
+                newToken
+            );
 
             setToken(newToken);
 
-            // 🔧 Buscar dados do usuário após o login usando o endpoint /profile
-            const userResponse = await axios.get(`${API_URL}/profile`, {
-                headers: { Authorization: `Bearer ${newToken}` }
-            });
+
+            /*
+             * Agora o api.js já consegue pegar
+             * o token do localStorage e colocar:
+             *
+             * Authorization: Bearer TOKEN
+             */
+            const userResponse = await api.get(
+                '/profile'
+            );
+
+            console.log(
+                'Usuário recebido após login:',
+                userResponse.data
+            );
 
             const userData = userResponse.data;
-            console.log("Dados do usuário após login:", userData);
 
-            setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
-            setIsAuthenticated(true);
+            saveUser(userData);
 
-            return { success: true, data: userData };
+
+            return {
+                success: true,
+                data: userData,
+            };
+
         } catch (error) {
-            console.error("Erro no login:", error);
+
+            console.error(
+                'ERRO NO LOGIN:',
+                error.response?.data || error
+            );
+
             return {
                 success: false,
-                error: error.response?.data?.message || "Erro ao fazer login"
+                error:
+                    typeof error.response?.data === 'string'
+                        ? error.response.data
+                        : error.response?.data?.message ||
+                          'E-mail ou senha inválidos.',
             };
         }
     };
 
-    const register = async (userData) => {
-        try {
-            const response = await axios.post(`${API_URL}/auth/register`, userData);
 
+    // =========================================================
+    // REGISTER
+    // =========================================================
+
+    const register = async ({
+        name,
+        email,
+        password,
+        role,
+    }) => {
+
+        try {
+
+            const response = await api.post(
+                '/auth/register',
+                {
+                    name,
+                    email,
+                    password,
+                    role,
+                }
+            );
+
+            /*
+             * Register também retorna String = JWT
+             */
             const newToken = response.data;
 
-            console.log("Registro realizado, token:", newToken);
+            if (!newToken) {
 
-            // Salvar token
-            localStorage.setItem('token', newToken);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+                return {
+                    success: false,
+                    error: 'Servidor não retornou um token.',
+                };
+            }
+
+
+            localStorage.setItem(
+                'token',
+                newToken
+            );
 
             setToken(newToken);
 
-            // 🔧 Buscar dados do usuário após o registro
-            const userResponse = await axios.get(`${API_URL}/profile`, {
-                headers: { Authorization: `Bearer ${newToken}` }
-            });
 
-            const newUser = userResponse.data;
-            console.log("Dados do usuário após registro:", newUser);
+            /*
+             * O interceptor do api.js
+             * envia o token automaticamente.
+             */
+            const userResponse = await api.get(
+                '/profile'
+            );
 
-            setUser(newUser);
-            localStorage.setItem('user', JSON.stringify(newUser));
-            setIsAuthenticated(true);
+            const userData = userResponse.data;
 
-            return { success: true, data: newUser };
+            saveUser(userData);
+
+
+            return {
+                success: true,
+                data: userData,
+            };
+
         } catch (error) {
-            console.error("Erro no registro:", error);
+
+            console.error(
+                'ERRO NO REGISTRO:',
+                error.response?.data || error
+            );
+
             return {
                 success: false,
-                error: error.response?.data?.message || "Erro ao fazer registro"
+                error:
+                    typeof error.response?.data === 'string'
+                        ? error.response.data
+                        : error.response?.data?.message ||
+                          'Erro ao criar conta.',
             };
         }
     };
 
+
+    // =========================================================
+    // LOGOUT
+    // =========================================================
+
     const logout = () => {
+
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        delete axios.defaults.headers.common['Authorization'];
 
         setToken(null);
         setUser(null);
-        setIsAuthenticated(false);
     };
+
+
+    // =========================================================
+    // ATUALIZAR USUÁRIO LOCAL
+    // =========================================================
 
     const updateUser = (updatedUser) => {
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+
+        saveUser(updatedUser);
     };
 
-    // 🔧 Função para atualizar o perfil do usuário
-    const updateProfile = async (profileData) => {
-        try {
-            const response = await axios.put(`${API_URL}/profile`, profileData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
 
-            // Se o email mudou, o backend pode retornar um novo token
-            if (response.data.token) {
-                const newToken = response.data.token;
-                localStorage.setItem('token', newToken);
-                axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-                setToken(newToken);
+    // =========================================================
+    // UPDATE PROFILE
+    // =========================================================
+
+    const updateProfile = async (profileData) => {
+
+        try {
+
+            const response = await api.put(
+                '/profile',
+                profileData
+            );
+
+            const data = response.data;
+
+
+            /*
+             * Caso o e-mail tenha sido alterado,
+             * o backend retorna:
+             *
+             * {
+             *   message,
+             *   token,
+             *   user
+             * }
+             */
+
+            if (data.token) {
+
+                localStorage.setItem(
+                    'token',
+                    data.token
+                );
+
+                setToken(data.token);
+
+                saveUser(data.user);
+
+                return {
+                    success: true,
+                    data: data.user,
+                };
             }
 
-            // Atualizar dados do usuário
-            const updatedUser = response.data.user || response.data;
-            setUser(updatedUser);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
 
-            return { success: true, data: updatedUser };
+            /*
+             * Caso normal:
+             *
+             * retorna diretamente User
+             */
+
+            saveUser(data);
+
+            return {
+                success: true,
+                data,
+            };
+
         } catch (error) {
-            console.error("Erro ao atualizar perfil:", error);
+
+            console.error(
+                'Erro ao atualizar perfil:',
+                error.response?.data || error
+            );
+
             return {
                 success: false,
-                error: error.response?.data?.message || "Erro ao atualizar perfil"
+                error:
+                    typeof error.response?.data === 'string'
+                        ? error.response.data
+                        : error.response?.data?.message ||
+                          'Erro ao atualizar perfil.',
             };
         }
     };
 
-    const value = {
-        user,
-        token,
-        loading,
-        isAuthenticated,
-        login,
-        register,
-        logout,
-        updateUser,
-        updateProfile, // Adicionando função de atualização de perfil
-        hasRole: (role) => user?.role === role,
-        isClient: () => user?.role === 'CLIENT',
-        isFreelancer: () => user?.role === 'FREELANCER'
+
+    // =========================================================
+    // DELETE PROFILE
+    // =========================================================
+
+    const deleteProfile = async () => {
+
+        try {
+
+            await api.delete('/profile');
+
+            logout();
+
+            return {
+                success: true,
+            };
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao excluir conta:',
+                error.response?.data || error
+            );
+
+            return {
+                success: false,
+                error:
+                    typeof error.response?.data === 'string'
+                        ? error.response.data
+                        : error.response?.data?.message ||
+                          'Erro ao excluir conta.',
+            };
+        }
     };
+
+
+    // =========================================================
+    // UPLOAD FOTO
+    // =========================================================
+
+    const uploadProfilePhoto = async (file) => {
+
+        try {
+
+            const formData = new FormData();
+
+            formData.append(
+                'file',
+                file
+            );
+
+            await api.post(
+                '/profile/upload-photo',
+                formData
+            );
+
+            /*
+             * Busca novamente os dados
+             * do usuário depois do upload.
+             */
+            await fetchUser();
+
+            return {
+                success: true,
+            };
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao enviar foto:',
+                error.response?.data || error
+            );
+
+            return {
+                success: false,
+                error:
+                    typeof error.response?.data === 'string'
+                        ? error.response.data
+                        : error.response?.data?.message ||
+                          'Erro ao enviar foto.',
+            };
+        }
+    };
+
+
+    // =========================================================
+    // ROLES
+    // =========================================================
+
+    const hasRole = (role) => {
+        return user?.role === role;
+    };
+
+    const isCustomer = () => {
+        return user?.role === 'CUSTOMER';
+    };
+
+    const isSeller = () => {
+        return user?.role === 'SELLER';
+    };
+
+
+    // =========================================================
+    // CONTEXT
+    // =========================================================
+
+    const value = {
+
+        user,
+
+        token,
+
+        loading,
+
+        /*
+         * Só considera logado quando temos
+         * token E usuário.
+         */
+        isAuthenticated:
+            Boolean(token && user),
+
+        login,
+
+        register,
+
+        logout,
+
+        updateUser,
+
+        updateProfile,
+
+        deleteProfile,
+
+        uploadProfilePhoto,
+
+        loadUser: fetchUser,
+
+        hasRole,
+
+        isCustomer,
+
+        isSeller,
+    };
+
 
     return (
         <AuthContext.Provider value={value}>
@@ -195,3 +562,5 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
+
+export default AuthContext;
