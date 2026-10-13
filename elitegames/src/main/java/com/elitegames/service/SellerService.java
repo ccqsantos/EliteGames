@@ -58,4 +58,8 @@ public class SellerService {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Loja não encontrada."));
     }
+
+    public java.util.List<Seller> findByStatus(SellerStatus status) {
+        return repository.findByStatus(status);
+    }
 }

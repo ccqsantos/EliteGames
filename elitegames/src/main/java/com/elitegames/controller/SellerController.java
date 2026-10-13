@@ -1,6 +1,7 @@
 package com.elitegames.controller;
 
 import com.elitegames.entity.Seller;
+import com.elitegames.entity.SellerStatus;
 import com.elitegames.service.SellerService;
 import com.elitegames.service.UserService;
 import com.elitegames.config.JwtUtil;
@@ -82,5 +83,22 @@ public class SellerController {
             return ResponseEntity.status(403).body("Apenas administradores podem rejeitar lojas.");
         }
         return ResponseEntity.ok(sellerService.reject(id));
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<?> pending(@RequestHeader("Authorization") String authHeader) {
+        if (!"ADMIN".equals(jwtUtil.extractRole(authHeader.substring(7)))) {
+            return ResponseEntity.status(403).body("Apenas administradores.");
+        }
+        return ResponseEntity.ok(sellerService.findByStatus(SellerStatus.PENDING));
+    }
+
+    @PutMapping("/{id}/suspend")
+    public ResponseEntity<?> suspend(@PathVariable Long id,
+                                     @RequestHeader("Authorization") String authHeader) {
+        if (!"ADMIN".equals(jwtUtil.extractRole(authHeader.substring(7)))) {
+            return ResponseEntity.status(403).body("Apenas administradores.");
+        }
+        return ResponseEntity.ok(sellerService.suspend(id));
     }
 }

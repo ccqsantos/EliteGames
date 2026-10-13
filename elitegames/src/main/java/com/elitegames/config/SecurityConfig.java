@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 
@@ -56,10 +57,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/h2-console/**").permitAll()
                         .requestMatchers("/profile/**").authenticated()
-                        .requestMatchers("/seller/register", "/seller/me").authenticated()
-                        .requestMatchers("/seller/*/approve", "/seller/*/reject").authenticated()
-                        .requestMatchers("/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/products/my").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+                        .requestMatchers("/products/**").authenticated()
+                        .requestMatchers("/seller/**").authenticated()
                         .requestMatchers("/orders/**").authenticated()
+                        .anyRequest().permitAll()
                         .anyRequest().permitAll()
                 )
 

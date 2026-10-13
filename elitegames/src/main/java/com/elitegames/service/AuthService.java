@@ -38,6 +38,9 @@ public class AuthService {
         if (existingUser != null) {
             throw new RuntimeException("Email já cadastrado.");
         }
+        if (role == null || role == Role.ADMIN) {
+            throw new RuntimeException("Tipo de conta inválido.");
+        }
 
         /*
          * Criptografa a senha antes de salvar
