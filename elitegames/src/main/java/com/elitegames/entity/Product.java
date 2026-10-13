@@ -1,5 +1,6 @@
 package com.elitegames.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,6 +41,7 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
+    @JsonIgnoreProperties({"taxId", "bankAccount"})
     private Seller seller;
 
     @Column(name = "orders_completed")

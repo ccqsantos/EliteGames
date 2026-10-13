@@ -18,6 +18,11 @@ public class OrderService {
 
     @Transactional
     public Order create(Product product, User client) {
+        if (product.getStock() != null) {
+            if (product.getStock() < 1) throw new RuntimeException("Produto sem estoque.");
+            product.setStock(product.getStock() - 1);
+            productService.save(product);
+        }
         Order order = Order.builder()
                 .service(product)
                 .client(client)
@@ -80,6 +85,11 @@ public class OrderService {
             throw new RuntimeException("Apenas pedidos com status PENDING podem ser cancelados. Status atual: " + order.getStatus());
         }
         order.setStatus(OrderStatus.CANCELED);
+        Product p = order.getService();
+        if (p.getStock() != null) {
+            p.setStock(p.getStock() + 1);
+            productService.save(p);
+        }
         return repository.save(order);
     }
 

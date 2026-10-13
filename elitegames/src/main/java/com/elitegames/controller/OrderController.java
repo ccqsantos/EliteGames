@@ -39,6 +39,10 @@ public class OrderController {
                 return ResponseEntity.badRequest().body("Você não pode comprar seu próprio produto.");
             }
 
+            if (!"CUSTOMER".equals(jwtUtil.extractRole(token))) {
+                return ResponseEntity.status(403).body("Apenas clientes podem comprar.");
+            }
+
             Order order = orderService.create(product, client);
             return ResponseEntity.ok(order);
         } catch (RuntimeException e) {
