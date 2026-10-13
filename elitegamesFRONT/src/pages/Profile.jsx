@@ -394,12 +394,12 @@ const Profile = () => {
 
                 {/* ACTIONS */}
                 <div className="profile-actions">
-                    <button
+                    <BsTrash size={30}/><button
                         className="btn-delete"
                         onClick={handleDeleteAccount}
                         title="Excluir conta"
                     >
-                        <BsTrash /> Excluir Conta
+                        Excluir Conta
                     </button>
                     <button className="btn-logout" onClick={handleLogout}>
                         Sair
