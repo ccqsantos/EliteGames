@@ -25,6 +25,9 @@ public class Seller {
     @JsonBackReference
     private User user;
 
+    @Column(name = "cnpj", unique = true, nullable = false)
+    private String cnpj;
+
     @Column(nullable = false)
     private String storeName;
 

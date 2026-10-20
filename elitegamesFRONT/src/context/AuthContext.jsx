@@ -531,27 +531,16 @@ export const AuthProvider = ({ children }) => {
          */
         isAuthenticated:
             Boolean(token && user),
-
         login,
-
         register,
-
         logout,
-
         updateUser,
-
         updateProfile,
-
         deleteProfile,
-
         uploadProfilePhoto,
-
         loadUser: fetchUser,
-
         hasRole,
-
         isCustomer,
-
         isSeller,
     };
 

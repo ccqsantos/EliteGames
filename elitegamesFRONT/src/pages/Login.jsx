@@ -1,40 +1,17 @@
 import React, { useState, useEffect } from "react";
-import {
-    BsFillEyeFill,
-    BsFillEyeSlashFill
-} from "react-icons/bs";
-import {
-    Link,
-    useNavigate
-} from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
-import "../css/Auth.css";
-
-import {
-    FaApple,
-    FaGoogle
-} from "react-icons/fa";
-
+import { Eye, EyeOff, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { FaGoogle, FaApple } from "react-icons/fa";
 import logo from "../assets/elitegames_logo1_outline.png";
 
-
 const Login = () => {
-
     const navigate = useNavigate();
-
-    const {
-        login,
-        isAuthenticated,
-        loading: authLoading
-    } = useAuth();
-
+    const { login, isAuthenticated, loading: authLoading } = useAuth();
 
     // =========================================================
     // FORM
     // =========================================================
-
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -42,464 +19,272 @@ const Login = () => {
     });
 
     const [showPassword, setShowPassword] = useState(false);
-
     const [errors, setErrors] = useState({});
-
     const [loading, setLoading] = useState(false);
-
 
     // =========================================================
     // REDIRECIONAR SE JÁ ESTIVER LOGADO
     // =========================================================
-
     useEffect(() => {
-
         if (!authLoading && isAuthenticated) {
             navigate("/", { replace: true });
         }
-
-    }, [
-        isAuthenticated,
-        authLoading,
-        navigate
-    ]);
-
+    }, [isAuthenticated, authLoading, navigate]);
 
     // =========================================================
     // INPUT
     // =========================================================
-
     const handleChange = (e) => {
-
-        const {
-            name,
-            value,
-            type,
-            checked
-        } = e.target;
+        const { name, value, type, checked } = e.target;
 
         setFormData((prev) => ({
             ...prev,
-            [name]:
-                type === "checkbox"
-                    ? checked
-                    : value,
+            [name]: type === "checkbox" ? checked : value,
         }));
 
         if (errors[name]) {
-            setErrors((prev) => ({
-                ...prev,
-                [name]: "",
-            }));
+            setErrors((prev) => ({ ...prev, [name]: "" }));
         }
-
         if (errors.api) {
-            setErrors((prev) => ({
-                ...prev,
-                api: "",
-            }));
+            setErrors((prev) => ({ ...prev, api: "" }));
         }
     };
-
 
     // =========================================================
     // VALIDAÇÃO
     // =========================================================
-
     const validateForm = () => {
-
         const newErrors = {};
 
         if (!formData.email.trim()) {
-
-            newErrors.email =
-                "E-mail é obrigatório";
-
-        } else if (
-            !/\S+@\S+\.\S+/.test(
-                formData.email
-            )
-        ) {
-
-            newErrors.email =
-                "E-mail inválido";
+            newErrors.email = "E-mail é obrigatório";
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = "E-mail inválido";
         }
 
-
         if (!formData.password.trim()) {
-
-            newErrors.password =
-                "Senha é obrigatória";
-
-        } else if (
-            formData.password.length < 6
-        ) {
-
-            newErrors.password =
-                "Senha deve ter no mínimo 6 caracteres";
+            newErrors.password = "Senha é obrigatória";
+        } else if (formData.password.length < 6) {
+            newErrors.password = "Senha deve ter no mínimo 6 caracteres";
         }
 
         return newErrors;
     };
 
-
     // =========================================================
     // LOGIN
     // =========================================================
-
     const handleSubmit = async (e) => {
-
         e.preventDefault();
 
-        const validationErrors =
-            validateForm();
-
-        if (
-            Object.keys(validationErrors)
-                .length > 0
-        ) {
-
+        const validationErrors = validateForm();
+        if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
         }
 
-
         setLoading(true);
 
         try {
-
-            /*
-             * IMPORTANTE:
-             *
-             * NÃO chamamos authService.login()
-             * aqui.
-             *
-             * O AuthContext já faz:
-             *
-             * POST /auth/login
-             * ↓
-             * recebe JWT
-             * ↓
-             * salva JWT
-             * ↓
-             * GET /profile
-             * ↓
-             * salva usuário
-             */
-
-            const result = await login(
-                formData.email,
-                formData.password
-            );
-
+            const result = await login(formData.email, formData.password);
 
             if (!result.success) {
-
-                setErrors({
-                    api: result.error
-                });
-
+                setErrors({ api: result.error });
                 return;
             }
 
-
-            console.log(
-                "Login realizado:",
-                result.data
-            );
-
-
-            /*
-             * result.data deve ser algo como:
-             *
-             * {
-             *     id: 1,
-             *     name: "Cauã",
-             *     email: "...",
-             *     role: "CUSTOMER"
-             * }
-             */
-
-
-            navigate("/", {
-                replace: true
-            });
-
+            navigate("/", { replace: true });
         } catch (error) {
-
-            console.error(
-                "Erro inesperado no login:",
-                error
-            );
-
+            console.error("Erro inesperado no login:", error);
             setErrors({
-                api:
-                    "Erro ao realizar login. Tente novamente."
+                api: "Erro ao realizar login. Tente novamente.",
             });
-
         } finally {
-
             setLoading(false);
         }
     };
 
-
     // =========================================================
     // RENDER
     // =========================================================
-
     return (
-        <div className="auth-container login-container">
+        <div className="min-h-screen bg-[#0a0a0a] flex text-white">
 
-            <div className="auth-card join-card">
+            {/* LADO ESQUERDO - Banner Visual (Esconde no mobile) */}
+            <div className="hidden lg:flex lg:w-1/2 relative bg-[#0f0f0f] flex-col justify-center px-16 overflow-hidden border-r border-gray-800">
+                {/* Efeito de brilho no fundo */}
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px]"></div>
 
-                <div className="auth-header">
+                <div className="relative z-10">
+                    <img
+                        src={logo}
+                        className="w-24 h-24 mb-8 flex justify-self-center"
+                        alt="EliteGames Logo"
+                    />
+                    <h1 className="text-5xl font-bold leading-tight mb-6">
+                        Bem-vindo de volta à <span className="text-purple-500">Elite</span>.
+                    </h1>
+                    <p className="text-gray-400 text-lg mb-8 max-w-md">
+                        Entre na sua conta e continue dominando com as melhores peças de hardware do mercado.
+                    </p>
 
-                    <div className="auth-icon flex justify-items-center">
+                    <div className="space-y-4">
+                        {[
+                            "Acompanhe seus pedidos em tempo real",
+                            "Acesse ofertas exclusivas para membros",
+                            "Gerencie sua loja e produtos (Vendedores)",
+                        ].map((item, index) => (
+                            <div key={index} className="flex items-center gap-3 text-gray-300">
+                                <CheckCircle2 size={20} className="text-purple-500 flex-shrink-0" />
+                                <span>{item}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
 
-                        <img
-                            src={logo}
-                            style={{
-                                width: 100,
-                                height: 100,
-                                alignSelf: "center",
-                            }}
-                            alt="logo EliteGames"
-                        />
+            {/* LADO DIREITO - Formulário */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
+                <div className="w-full max-w-md">
 
+                    <div className="text-center mb-10">
+                        <h2 className="text-3xl font-bold text-white mb-2">Entrar na Elite</h2>
+                        <p className="text-gray-400">Digite suas credenciais para acessar.</p>
                     </div>
 
-                        <span className="highlight">
-                            Bem-vindo de volta
-                        </span>
-
-                    <p>
-                        Entre na{" "}
-                        <span className="highlight-text">
-                            Elite
-                        </span>{" "}
-                        e continue dominando
-                    </p>
-                </div>
-
-
-                <form
-                    onSubmit={handleSubmit}
-                    className="auth-form"
-                >
-
                     {errors.api && (
-                        <div className="error-message api-error">
+                        <div className="mb-6 bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm flex items-center">
                             {errors.api}
                         </div>
                     )}
 
+                    <form onSubmit={handleSubmit} className="space-y-5">
 
-                    {/* EMAIL */}
-
-                    <div className="form-group">
-
-                        <label htmlFor="email">
-                            E-mail
-                        </label>
-
-                        <div className="input-icon">
-
+                        {/* E-mail */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1.5">E-mail</label>
                             <input
                                 type="email"
-                                id="email"
                                 name="email"
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="seu@email.com"
                                 disabled={loading}
                                 autoComplete="email"
-                                className={
-                                    errors.email
-                                        ? "error"
-                                        : ""
-                                }
+                                className={`w-full bg-[#141414] border rounded-lg px-4 py-3 text-white outline-none transition focus:border-purple-500 ${
+                                    errors.email ? 'border-red-500' : 'border-gray-800'
+                                }`}
                             />
-
+                            {errors.email && <span className="text-red-400 text-xs mt-1">{errors.email}</span>}
                         </div>
 
-                        {errors.email && (
-                            <span className="error-message">
-                                {errors.email}
-                            </span>
-                        )}
+                        {/* Senha */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1.5">Senha</label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    placeholder="••••••••"
+                                    disabled={loading}
+                                    autoComplete="current-password"
+                                    className={`w-full bg-[#141414] border rounded-lg px-4 py-3 pr-12 text-white outline-none transition focus:border-purple-500 ${
+                                        errors.password ? 'border-red-500' : 'border-gray-800'
+                                    }`}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition"
+                                    tabIndex="-1"
+                                    disabled={loading}
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
+                            {errors.password && <span className="text-red-400 text-xs mt-1">{errors.password}</span>}
+                        </div>
 
-                    </div>
+                        {/* Opções */}
+                        <div className="flex items-center justify-between text-sm">
+                            <label className="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-gray-300 transition">
+                                <input
+                                    type="checkbox"
+                                    name="rememberMe"
+                                    checked={formData.rememberMe}
+                                    onChange={handleChange}
+                                    disabled={loading}
+                                    className="w-4 h-4 rounded border-gray-800 bg-[#141414] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 accent-purple-600 cursor-pointer"
+                                />
+                                <span>Lembrar de mim</span>
+                            </label>
 
+                            <Link
+                                to="/forgot-password"
+                                className="text-purple-400 hover:text-purple-300 transition"
+                            >
+                                Esqueceu a senha?
+                            </Link>
+                        </div>
 
-                    {/* SENHA */}
+                        {/* Botão de Envio */}
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 rounded-lg transition flex items-center justify-center gap-2 mt-4 disabled:opacity-70 disabled:cursor-not-allowed group"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 size={20} className="animate-spin" /> Entrando...
+                                </>
+                            ) : (
+                                <>
+                                    Entrar na Elite <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
+                    </form>
 
-                    <div className="form-group">
+                    {/* Login Social */}
+                    <div className="mt-8">
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-800"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-[#0a0a0a] text-gray-500">ou entre com</span>
+                            </div>
+                        </div>
 
-                        <label htmlFor="password">
-                            Senha
-                        </label>
-
-                        <div className="input-icon password-input">
-
-                            <input
-                                type={
-                                    showPassword
-                                        ? "text"
-                                        : "password"
-                                }
-                                id="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                placeholder="••••••••"
-                                disabled={loading}
-                                autoComplete="current-password"
-                                className={
-                                    errors.password
-                                        ? "error"
-                                        : ""
-                                }
-                            />
-
+                        <div className="mt-6 grid grid-cols-2 gap-4">
                             <button
                                 type="button"
-                                className="password-toggle-btn"
-                                onClick={() =>
-                                    setShowPassword(
-                                        (prev) => !prev
-                                    )
-                                }
-                                tabIndex="-1"
                                 disabled={loading}
+                                className="flex items-center justify-center gap-2 bg-[#141414] border border-gray-800 hover:border-gray-600 text-white py-2.5 rounded-lg transition disabled:opacity-50"
                             >
-                                {showPassword
-                                    ? <BsFillEyeSlashFill />
-                                    : <BsFillEyeFill />
-                                }
+                                <FaGoogle size={18} /> Google
                             </button>
-
-                        </div>
-
-                        {errors.password && (
-                            <span className="error-message">
-                                {errors.password}
-                            </span>
-                        )}
-
-                    </div>
-
-
-                    {/* OPÇÕES */}
-
-                    <div className="form-options">
-
-                        <label className="checkbox-label">
-
-                            <input
-                                type="checkbox"
-                                name="rememberMe"
-                                checked={
-                                    formData.rememberMe
-                                }
-                                onChange={handleChange}
+                            <button
+                                type="button"
                                 disabled={loading}
-                            />
-
-                            <span>
-                                Lembrar de mim
-                            </span>
-
-                        </label>
-
-                        <Link
-                            to="/forgot-password"
-                            className="forgot-link"
-                        >
-                            Esqueceu a senha?
-                        </Link>
-
+                                className="flex items-center justify-center gap-2 bg-[#141414] border border-gray-800 hover:border-gray-600 text-white py-2.5 rounded-lg transition disabled:opacity-50"
+                            >
+                                <FaApple size={20} /> Apple
+                            </button>
+                        </div>
                     </div>
 
-
-                    {/* BOTÃO */}
-
-                    <button
-                        type="submit"
-                        className="btn-auth-primary"
-                        disabled={loading}
-                    >
-
-                        {loading ? (
-                            <>
-                                <span className="spinner"></span>
-                                Entrando...
-                            </>
-                        ) : (
-                            "Entrar na Elite"
-                        )}
-
-                    </button>
-
-                </form>
-
-
-                {/* SOCIAL */}
-
-                <div className="auth-divider">
-                    <span>
-                        ou entre com
-                    </span>
-                </div>
-
-
-                <div className="social-login">
-
-                    <button
-                        type="button"
-                        className="btn-social"
-                        disabled={loading}
-                    >
-                        <FaGoogle size={20} />
-                        Google
-                    </button>
-
-                    <button
-                        type="button"
-                        className="btn-social"
-                        disabled={loading}
-                    >
-                        <FaApple size={24} />
-                        Apple
-                    </button>
-
-                </div>
-
-
-                {/* FOOTER */}
-
-                <div className="auth-footer">
-
-                    <p>
+                    <div className="mt-8 text-center text-sm text-gray-400">
                         Não tem uma conta?{" "}
-
-                        <Link
-                            to="/join"
-                            className="auth-link"
-                        >
+                        <Link to="/join" className="text-purple-400 hover:text-purple-300 font-semibold transition">
                             Cadastre-se grátis
                         </Link>
-
-                    </p>
-
-                    <p className="footer-note">
-                        ⚡ Domine o jogo com a EliteGames
-                    </p>
+                    </div>
 
                 </div>
-
             </div>
-
         </div>
     );
 };

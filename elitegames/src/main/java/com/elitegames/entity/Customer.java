@@ -19,6 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @Table(name = "customer")
 public class Customer extends User {
+
     private String firstName;
     private String lastName;
     private String phone;
