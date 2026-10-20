@@ -142,10 +142,6 @@ const Header = () => {
                                     <span className="user-name">
                                         {user.name || 'Usuário'}
                                     </span>
-
-                                    <span className="user-status">
-                                        Logado
-                                    </span>
                                 </div>
                             </Link>
 

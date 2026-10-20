@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import 'tailwindcss';
-/* src/index.css */
+
 :root {
     --bg-primary: #0a0a0a;
     --bg-card: #141414;
@@ -14,11 +14,12 @@
     --purple-light: #a855f7;
 }
 
-* {
-    margin: 0;
-    padding: 5px;
-    box-sizing: border-box;
-    align-items: center;
+
+html,
+body,
+#root {
+    width: 100%;
+    min-height: 100%;
 }
 
 body {
