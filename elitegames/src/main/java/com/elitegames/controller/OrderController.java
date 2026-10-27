@@ -26,6 +26,7 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<?> create(
             @RequestParam Long productId,
+            @RequestParam(defaultValue = "1") int quantity,
             @RequestHeader("Authorization") String authHeader
     ) {
         try {
@@ -35,7 +36,7 @@ public class OrderController {
             Product product = productService.getById(productId);
             User client = userService.getUserById(clientId);
 
-            if (product.getSeller().getUser().getId().equals(clientId)) {
+            if (product.getSeller().getId().equals(clientId)) {
                 return ResponseEntity.badRequest().body("Você não pode comprar seu próprio produto.");
             }
 
@@ -43,7 +44,7 @@ public class OrderController {
                 return ResponseEntity.status(403).body("Apenas clientes podem comprar.");
             }
 
-            Order order = orderService.create(product, client);
+            Order order = orderService.create(product, client, quantity);
             return ResponseEntity.ok(order);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -66,7 +67,7 @@ public class OrderController {
     public ResponseEntity<?> listReceivedOrders(@RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = jwtUtil.extractUserId(authHeader.substring(7));
-            return ResponseEntity.ok(orderService.findBySellerUserId(userId));
+            return ResponseEntity.ok(orderService.findBySellerId(userId));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -83,7 +84,7 @@ public class OrderController {
             Order order = orderService.getById(id);
 
             boolean isClient = order.getClient().getId().equals(userId);
-            boolean isSeller = order.getService().getSeller().getUser().getId().equals(userId);
+            boolean isSeller = order.getService().getSeller().getId().equals(userId);
 
             if (!isClient && !isSeller) {
                 return ResponseEntity.status(403).body("Acesso negado.");
@@ -106,7 +107,7 @@ public class OrderController {
             Order order = orderService.getById(id);
 
             boolean isClient = order.getClient().getId().equals(userId);
-            boolean isSeller = order.getService().getSeller().getUser().getId().equals(userId);
+            boolean isSeller = order.getService().getSeller().getId().equals(userId);
 
             if (!isClient && !isSeller) {
                 return ResponseEntity.status(403).body("Acesso negado.");

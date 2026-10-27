@@ -1,6 +1,7 @@
 package com.elitegames.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -20,10 +21,18 @@ public class Seller {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", unique = true, nullable = false)
-    @JsonBackReference
-    private User user;
+    @Column(nullable = false)
+    private String name;
+
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @Transient
+    private String password;
+
+    @JsonIgnore
+    @Column(nullable = false)
+    private String hash;
 
     @Column(name = "cnpj", unique = true, nullable = false)
     private String cnpj;

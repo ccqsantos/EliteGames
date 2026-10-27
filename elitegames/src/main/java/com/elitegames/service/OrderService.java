@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,17 +18,24 @@ public class OrderService {
     private final ProductService productService;
 
     @Transactional
-    public Order create(Product product, User client) {
+    public Order create(Product product, User client, int quantity) {
+        if (quantity <= 0) throw new RuntimeException("Quantidade inválida.");
         if (product.getStock() != null) {
             if (product.getStock() < 1) throw new RuntimeException("Produto sem estoque.");
             product.setStock(product.getStock() - 1);
             productService.save(product);
         }
+
+        product.setStock(product.getStock() - quantity);
+
+        BigDecimal unitPrice = BigDecimal.valueOf(product.getPrice());     // Double → BigDecimal
+        BigDecimal total = unitPrice.multiply(BigDecimal.valueOf(quantity));
         Order order = Order.builder()
                 .service(product)
                 .client(client)
+                .quantity(quantity)
                 .status(OrderStatus.PENDING)
-                .totalAmount(product.getPrice())
+                .totalAmount(total)
                 .build();
 
         return repository.save(order);
@@ -97,8 +105,8 @@ public class OrderService {
         return repository.findByClientId(clientId);
     }
 
-    public List<Order> findBySellerUserId(Long sellerUserId) {
-        return repository.findByServiceSellerUserId(sellerUserId);
+    public List<Order> findBySellerId(Long sellerId) {
+        return repository.findByServiceSellerId(sellerId);
     }
 
     @Transactional

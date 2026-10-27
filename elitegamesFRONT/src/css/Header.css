@@ -23,12 +23,10 @@
     align-items: center;
     gap: 2px;
     text-decoration: none;
-    margin-top: 20px;
 }
 
 .logo-icon {
     font-size: 1.8rem;
-    margin-top: 6px;
 }
 
 .logo-text {

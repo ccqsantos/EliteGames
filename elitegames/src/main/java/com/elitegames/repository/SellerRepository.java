@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SellerRepository extends JpaRepository<Seller, Long> {
-    Optional<Seller> findByUser(User user);
-    Optional<Seller> findByUserId(Long userId);
     List<Seller> findByStatus(SellerStatus status);
+    Optional<Seller> findByEmail(String email);
+    Optional<Seller> findByStoreSlug(String storeSlug);
 }

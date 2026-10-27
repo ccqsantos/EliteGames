@@ -2,7 +2,6 @@ package com.elitegames.service_tests;
 
 import com.elitegames.entity.Seller;
 import com.elitegames.entity.SellerStatus;
-import com.elitegames.entity.User;
 import com.elitegames.repository.SellerRepository;
 import com.elitegames.service.SellerService;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,84 +27,107 @@ public class SellerServiceTest {
     @InjectMocks
     private SellerService sellerService;
 
-    // ---------- register ----------
+    // =========================================================
+    // updateProfile
+    // =========================================================
 
     @Test
-    @DisplayName("Should register seller correctly")
-    void register_correctly() {
-        User user = new User();
-        user.setId(10L);
-
-        Seller saved = Seller.builder()
+    @DisplayName("Should update seller profile fields correctly")
+    void updateProfile_correctly() {
+        Seller existing = Seller.builder()
                 .id(1L)
-                .user(user)
-                .storeName("Elite Store")
-                .storeSlug("elite-store")
-                .taxId("12345678000199")
-                .bankAccount("0001-12345-6")
+                .storeName("Old Name")
+                .storeSlug("old-slug")
+                .taxId("111")
+                .bankAccount("0001")
                 .status(SellerStatus.PENDING)
                 .build();
 
-        when(sellerRepository.findByUser(user)).thenReturn(Optional.empty());
-        when(sellerRepository.save(any(Seller.class))).thenReturn(saved);
+        when(sellerRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(sellerRepository.findByStoreSlug("new-slug")).thenReturn(Optional.empty());
+        when(sellerRepository.save(any(Seller.class))).thenAnswer(i -> i.getArgument(0));
 
-        Seller result = sellerService.register(
-                user, "Elite Store", "elite-store",
-                "12345678000199", "0001-12345-6"
+        Seller result = sellerService.updateProfile(
+                1L, "New Name", "new-slug", "222", "0002"
         );
 
-        assertNotNull(result);
-        assertEquals("Elite Store", result.getStoreName());
-        assertEquals("elite-store", result.getStoreSlug());
-        assertEquals(SellerStatus.PENDING, result.getStatus());
+        assertEquals("New Name", result.getStoreName());
+        assertEquals("new-slug", result.getStoreSlug());
+        assertEquals("222", result.getTaxId());
+        assertEquals("0002", result.getBankAccount());
 
-        verify(sellerRepository, times(1)).findByUser(user);
-        verify(sellerRepository, times(1)).save(any(Seller.class));
+        verify(sellerRepository).save(existing);
     }
 
     @Test
-    @DisplayName("Should throw when user already has a store")
-    void register_userAlreadyHasStore_throws() {
-        User user = new User();
-        user.setId(10L);
+    @DisplayName("Should keep existing fields when null is passed")
+    void updateProfile_keepsFieldsWhenNull() {
+        Seller existing = Seller.builder()
+                .id(1L)
+                .storeName("Old Name")
+                .storeSlug("old-slug")
+                .taxId("111")
+                .bankAccount("0001")
+                .status(SellerStatus.PENDING)
+                .build();
 
-        Seller existing = Seller.builder().id(99L).user(user).build();
-        when(sellerRepository.findByUser(user)).thenReturn(Optional.of(existing));
+        when(sellerRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(sellerRepository.save(any(Seller.class))).thenAnswer(i -> i.getArgument(0));
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                sellerService.register(user, "Elite Store", "elite-store",
-                        "12345678000199", "0001-12345-6")
-        );
+        Seller result = sellerService.updateProfile(1L, null, null, null, null);
 
-        assertEquals("Este usuário já possui uma loja cadastrada.", ex.getMessage());
-        verify(sellerRepository, never()).save(any(Seller.class));
-    }
-
-    // ---------- getByUserId ----------
-
-    @Test
-    @DisplayName("Should return seller by user ID")
-    void getByUserId_correctly() {
-        Seller seller = Seller.builder().id(1L).storeName("Elite Store").build();
-        when(sellerRepository.findByUserId(10L)).thenReturn(Optional.of(seller));
-
-        Seller result = sellerService.getByUserId(10L);
-
-        assertEquals("Elite Store", result.getStoreName());
+        assertEquals("Old Name", result.getStoreName());
+        assertEquals("old-slug", result.getStoreSlug());
+        assertEquals("111", result.getTaxId());
+        assertEquals("0001", result.getBankAccount());
     }
 
     @Test
-    @DisplayName("Should throw when seller not found by user ID")
-    void getByUserId_notFound_throws() {
-        when(sellerRepository.findByUserId(10L)).thenReturn(Optional.empty());
+    @DisplayName("Should throw when updating nonexistent seller")
+    void updateProfile_notFound_throws() {
+        when(sellerRepository.findById(99L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> sellerService.getByUserId(10L));
+                () -> sellerService.updateProfile(99L, "X", "x", null, null));
 
-        assertEquals("Loja não encontrada para este usuário.", ex.getMessage());
+        assertEquals("Loja não encontrada.", ex.getMessage());
+        verify(sellerRepository, never()).save(any());
     }
 
-    // ---------- getById ----------
+    @Test
+    @DisplayName("Should throw when slug is already used by another seller")
+    void updateProfile_slugInUse_throws() {
+        Seller existing = Seller.builder().id(1L).storeSlug("old-slug").build();
+        Seller other = Seller.builder().id(2L).storeSlug("taken-slug").build();
+
+        when(sellerRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(sellerRepository.findByStoreSlug("taken-slug")).thenReturn(Optional.of(other));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> sellerService.updateProfile(1L, "X", "taken-slug", null, null));
+
+        assertEquals("Slug já em uso.", ex.getMessage());
+        verify(sellerRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should allow keeping the same slug for the same seller")
+    void updateProfile_sameSlugSameSeller_allowed() {
+        Seller existing = Seller.builder().id(1L).storeSlug("my-slug").build();
+
+        when(sellerRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(sellerRepository.findByStoreSlug("my-slug")).thenReturn(Optional.of(existing));
+        when(sellerRepository.save(any(Seller.class))).thenAnswer(i -> i.getArgument(0));
+
+        Seller result = sellerService.updateProfile(1L, "X", "my-slug", null, null);
+
+        assertEquals("my-slug", result.getStoreSlug());
+        verify(sellerRepository).save(existing);
+    }
+
+    // =========================================================
+    // getById
+    // =========================================================
 
     @Test
     @DisplayName("Should return seller by ID")
@@ -115,6 +138,7 @@ public class SellerServiceTest {
         Seller result = sellerService.getById(1L);
 
         assertEquals("Elite Store", result.getStoreName());
+        assertEquals(1L, result.getId());
     }
 
     @Test
@@ -128,7 +152,9 @@ public class SellerServiceTest {
         assertEquals("Loja não encontrada.", ex.getMessage());
     }
 
-    // ---------- approve ----------
+    // =========================================================
+    // approve
+    // =========================================================
 
     @Test
     @DisplayName("Should approve seller and set approvedAt")
@@ -154,7 +180,9 @@ public class SellerServiceTest {
         verify(sellerRepository, never()).save(any());
     }
 
-    // ---------- reject ----------
+    // =========================================================
+    // reject
+    // =========================================================
 
     @Test
     @DisplayName("Should reject seller correctly")
@@ -179,7 +207,9 @@ public class SellerServiceTest {
         verify(sellerRepository, never()).save(any());
     }
 
-    // ---------- suspend ----------
+    // =========================================================
+    // suspend
+    // =========================================================
 
     @Test
     @DisplayName("Should suspend seller correctly")
@@ -202,5 +232,34 @@ public class SellerServiceTest {
         assertThrows(RuntimeException.class, () -> sellerService.suspend(99L));
 
         verify(sellerRepository, never()).save(any());
+    }
+
+    // =========================================================
+    // findByStatus
+    // =========================================================
+
+    @Test
+    @DisplayName("Should return sellers filtered by status")
+    void findByStatus_correctly() {
+        List<Seller> pending = List.of(
+                Seller.builder().id(1L).status(SellerStatus.PENDING).build(),
+                Seller.builder().id(2L).status(SellerStatus.PENDING).build()
+        );
+        when(sellerRepository.findByStatus(SellerStatus.PENDING)).thenReturn(pending);
+
+        List<Seller> result = sellerService.findByStatus(SellerStatus.PENDING);
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().allMatch(s -> s.getStatus() == SellerStatus.PENDING));
+    }
+
+    @Test
+    @DisplayName("Should return empty list when no sellers match status")
+    void findByStatus_empty() {
+        when(sellerRepository.findByStatus(SellerStatus.SUSPENDED)).thenReturn(List.of());
+
+        List<Seller> result = sellerService.findByStatus(SellerStatus.SUSPENDED);
+
+        assertTrue(result.isEmpty());
     }
 }

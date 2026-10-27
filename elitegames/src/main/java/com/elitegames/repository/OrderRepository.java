@@ -9,8 +9,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findByClientId(Long clientId);
 
-    // service.seller.user.id
-    List<Order> findByServiceSellerUserId(Long sellerUserId);
+    List<Order> findByServiceSellerId(Long sellerId);
 
     List<Order> findByServiceIdAndStatus(Long serviceId, OrderStatus status);
 
