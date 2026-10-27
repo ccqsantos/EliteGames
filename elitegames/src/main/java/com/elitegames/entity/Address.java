@@ -1,15 +1,22 @@
 package com.elitegames.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
+@Data
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "address")
 public class Address {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column
@@ -18,7 +25,7 @@ public class Address {
     @Column
     private String number;
 
-    @Column
+    @Column(name = "postal_code")
     private String postalCode;
 
     @Column
@@ -30,6 +37,8 @@ public class Address {
     @Column
     private String country;
 
-
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    @JsonIgnore
+    private Customer customer;
 }

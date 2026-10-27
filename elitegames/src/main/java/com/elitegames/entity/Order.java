@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.elitegames.service.ProductService;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
@@ -64,7 +65,7 @@ public class Order {
 
     // 🔧 Valor total do pedido (pode ser diferente do preço do serviço)
     @Column(name = "total_amount")
-    private Double totalAmount;
+    private BigDecimal totalAmount;
 
     // 🔧 Data de início e conclusão
     @Column(name = "started_at")
@@ -80,6 +81,8 @@ public class Order {
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus;
+
+    private int quantity;
 
     @Column(name = "payment_id")
     private String paymentId;

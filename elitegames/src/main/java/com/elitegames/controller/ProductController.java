@@ -29,7 +29,7 @@ public class ProductController {
     ) {
         try {
             Long userId = jwtUtil.extractUserId(authHeader.substring(7));
-            Seller seller = sellerService.getByUserId(userId);
+            Seller seller = sellerService.getById(userId);
 
             if (seller.getStatus() != SellerStatus.APPROVED) {
                 return ResponseEntity.status(403).body("Sua loja ainda não foi aprovada.");
@@ -62,7 +62,7 @@ public class ProductController {
     public ResponseEntity<?> listMyProducts(@RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = jwtUtil.extractUserId(authHeader.substring(7));
-            Seller seller = sellerService.getByUserId(userId);
+            Seller seller = sellerService.getById(userId);
             return ResponseEntity.ok(productService.findBySellerId(seller.getId()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -80,7 +80,7 @@ public class ProductController {
             Long userId = jwtUtil.extractUserId(authHeader.substring(7));
             Product existing = productService.getById(id);
 
-            if (!existing.getSeller().getUser().getId().equals(userId)) {
+            if (!existing.getSeller().getId().equals(userId)) {
                 return ResponseEntity.status(403).body("Você não tem permissão para editar este produto.");
             }
 
@@ -107,7 +107,7 @@ public class ProductController {
             Long userId = jwtUtil.extractUserId(authHeader.substring(7));
             Product existing = productService.getById(id);
 
-            if (!existing.getSeller().getUser().getId().equals(userId)) {
+            if (!existing.getSeller().getId().equals(userId)) {
                 return ResponseEntity.status(403).body("Você não tem permissão para excluir este produto.");
             }
 

@@ -9,6 +9,7 @@ import org.hibernate.type.SqlTypes;
 import tools.jackson.databind.JsonNode;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,10 +25,10 @@ public class Customer extends User {
     private String lastName;
     private String phone;
 
-    @Transient
-    private List<Address> addresses;
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Address> addresses = new ArrayList<>();
 
-    @Transient
+    @OneToOne(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Cart cart;
 
     @Builder.Default
@@ -36,6 +37,7 @@ public class Customer extends User {
     private boolean emailOnPromotions = false;
     @Builder.Default
     private boolean smsOnShipping = false;
+
 
     @Builder.Default
     private boolean acceptsMarketing = false;

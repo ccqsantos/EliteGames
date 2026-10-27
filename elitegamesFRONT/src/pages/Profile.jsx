@@ -26,6 +26,8 @@ const Profile = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [photoVersion, setPhotoVersion] = useState(Date.now());
+    const [profilePic, setProfilePic] = useState('');
+    const [hasPhoto, setHasPhoto] = useState(true);
 
     const [editFormData, setEditFormData] = useState({
         name: '',
@@ -105,6 +107,16 @@ const Profile = () => {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // (opcional) validação de tipo/tamanho
+        if (!file.type.startsWith('image/')) {
+            showError('Selecione um arquivo de imagem.');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showError('A imagem deve ter no máximo 5MB.');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('file', file);
 
@@ -112,16 +124,27 @@ const Profile = () => {
             await api.post('/profile/upload-photo', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
+
+            // Força o <img> a buscar a nova imagem, ignorando o cache
+            setHasPhoto(true);
             setPhotoVersion(Date.now());
+
+            // Atualiza o userData local para refletir que agora há foto
+            setUserData((prev) => (prev ? { ...prev, profileImage: true } : prev));
+            updateUser?.({ ...userData, profileImage: true });
+
             showSuccess('Foto atualizada com sucesso!');
         } catch (err) {
             console.error(err);
             showError(err.response?.data || 'Erro ao enviar a foto.');
+        } finally {
+            // Limpa o input para permitir reenviar o mesmo arquivo
+            e.target.value = '';
         }
     };
 
-    const profilePhotoUrl = userData?.profileImage
-        ? `http://localhost:8080/profile/photo?v=${photoVersion}`
+    const profilePhotoUrl = hasPhoto
+        ? `http://localhost:8080/profile/photo`
         : null;
 
     // ---------- Ações ----------
@@ -209,7 +232,8 @@ const Profile = () => {
                 <div className="bg-[#141414] border border-gray-800 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-6 relative">
                     <div className="relative">
                         {profilePhotoUrl ? (
-                            <img src={profilePhotoUrl} alt="Avatar" className="w-24 h-24 rounded-full object-cover border-2 border-purple-500/30" />
+                            <img src={profilePhotoUrl} alt="Avatar" className="w-24 h-24 rounded-full object-cover border-2 border-purple-500/30"
+                            onError={() => setHasPhoto(false)}/>
                         ) : (
                             <div className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg ${isSeller ? 'bg-purple-700' : 'bg-purple-600'}`}>
                                 {getInitials(userData.name)}
@@ -331,7 +355,7 @@ const Profile = () => {
                                     <h3 className="font-semibold text-sm text-white group-hover:text-purple-400 transition">Ir às Compras</h3>
                                     <p className="text-xs text-gray-500">Explore GPUs, periféricos e mais.</p>
                                 </Link>
-                                <Link to="/profile/preferences" className="group bg-[#0a0a0a] border border-gray-800 hover:border-purple-500/50 rounded-xl p-4 transition flex flex-col gap-2">
+                                <Link to="/profile/client-preferences" className="group bg-[#0a0a0a] border border-gray-800 hover:border-purple-500/50 rounded-xl p-4 transition flex flex-col gap-2">
                                     <BsPersonCircle size={24} className="text-purple-500 mb-1" />
                                     <h3 className="font-semibold text-sm text-white group-hover:text-purple-400 transition">Preferências</h3>
                                     <p className="text-xs text-gray-500">Complete seus dados e notificações.</p>

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -43,6 +44,9 @@ public class Product {
     @JoinColumn(name = "seller_id", nullable = false)
     @JsonIgnoreProperties({"taxId", "bankAccount"})
     private Seller seller;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private List<CartItem> cartItems = new ArrayList<>();
 
     @Column(name = "orders_completed")
     private Integer ordersCompleted;

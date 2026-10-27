@@ -21,28 +21,26 @@ public class SellerController {
     private final JwtUtil jwtUtil;
 
     // POST /seller/register — usuário com role SELLER cadastra sua loja
-    @PostMapping("/register")
-    public ResponseEntity<?> register(
+    @PutMapping("/me")
+    public ResponseEntity<?> updateMyStore(
             @RequestBody Map<String, String> body,
             @RequestHeader("Authorization") String authHeader
     ) {
         try {
-            Long userId = jwtUtil.extractUserId(authHeader.substring(7));
             String role = jwtUtil.extractRole(authHeader.substring(7));
-
             if (!"SELLER".equals(role)) {
-                return ResponseEntity.status(403).body("Apenas contas do tipo SELLER podem cadastrar loja.");
+                return ResponseEntity.status(403).body("Apenas contas SELLER.");
             }
 
-            Seller seller = sellerService.register(
-                    userService.getUserById(userId),
+            Long sellerId = jwtUtil.extractUserId(authHeader.substring(7));
+            Seller updated = sellerService.updateProfile(
+                    sellerId,
                     body.get("storeName"),
                     body.get("storeSlug"),
                     body.get("taxId"),
                     body.get("bankAccount")
             );
-
-            return ResponseEntity.ok(seller);
+            return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -52,8 +50,8 @@ public class SellerController {
     @GetMapping("/me")
     public ResponseEntity<?> me(@RequestHeader("Authorization") String authHeader) {
         try {
-            Long userId = jwtUtil.extractUserId(authHeader.substring(7));
-            return ResponseEntity.ok(sellerService.getByUserId(userId));
+            Long sellerId = jwtUtil.extractUserId(authHeader.substring(7)); // para SELLER, é seller.id
+            return ResponseEntity.ok(sellerService.getById(sellerId));
         } catch (RuntimeException e) {
             return ResponseEntity.status(404).body(e.getMessage());
         }

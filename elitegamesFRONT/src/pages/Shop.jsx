@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import api from '../services/api';
 
 const SORT_OPTIONS = [
     { value: 'recent', label: 'Mais recentes' },
@@ -38,19 +39,18 @@ export default function Shop() {
     // Fetch categories once
     useEffect(() => {
         const controller = new AbortController();
+
         (async () => {
             try {
-                const res = await fetch(`${API_URL}/api/public/categories`, {
+                const { data } = await api.get('/products/categories', {
                     signal: controller.signal,
-                    headers: { Accept: 'application/json' },
                 });
-                if (!res.ok) throw new Error(`Categories failed (${res.status})`);
-                const data = await res.json();
                 setCategories(Array.isArray(data) ? data : data.content ?? []);
             } catch (err) {
-                if (err.name !== 'AbortError') setCategories([]);
+                if (!axios.isCancel(err)) setCategories([]);
             }
         })();
+
         return () => controller.abort();
     }, []);
 
@@ -62,21 +62,19 @@ export default function Shop() {
             setLoading(true);
             setError(null);
             try {
-                const params = new URLSearchParams({
-                    page: String(page),
-                    size: String(PAGE_SIZE),
+                const params = {
+                    page,
+                    size: PAGE_SIZE,
                     sort,
-                });
-                if (debouncedSearch) params.set('q', debouncedSearch);
-                if (category !== 'all') params.set('category', category);
+                };
+                if (debouncedSearch) params.q = debouncedSearch;
+                if (category !== 'all') params.category = category;
 
-                const res = await fetch(`${API_URL}/api/public/products?${params}`, {
+                const { data } = await api.get('/products', {
+                    params,
                     signal: controller.signal,
-                    headers: { Accept: 'application/json' },
                 });
-                if (!res.ok) throw new Error(`Request failed (${res.status})`);
 
-                const data = await res.json();
                 if (Array.isArray(data)) {
                     setProducts(data);
                     setTotalPages(1);
@@ -85,7 +83,12 @@ export default function Shop() {
                     setTotalPages(data.totalPages ?? 1);
                 }
             } catch (err) {
-                if (err.name !== 'AbortError') setError(err.message);
+                if (axios.isCancel(err)) return;
+                setError(
+                    err.response?.data?.message ||
+                    err.message ||
+                    'Erro ao carregar produtos'
+                );
             } finally {
                 setLoading(false);
             }
@@ -162,7 +165,7 @@ export default function Shop() {
                     >
                         <option value="all">Todas</option>
                         {categories.map((c) => (
-                            <option key={c.id ?? c.slug} value={c.slug ?? c.name}>
+                            <option key={c.id ?? c.slug ?? c.name} value={c.slug ?? c.name}>
                                 {c.name}
                             </option>
                         ))}
@@ -228,30 +231,43 @@ export default function Shop() {
 function ProductCard({ product }) {
     const {
         id,
-        name,
-        brand,
+        title,
+        description,
         category,
         price,
-        currency = 'BRL',
-        imageUrl,
+        images = [],
         stock = 0,
-        rating,
+        averageRating,
+        ordersCompleted,
     } = product;
 
     const formattedPrice = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
-        currency,
+        currency: 'BRL',
     }).format(price ?? 0);
 
     const inStock = stock > 0;
+    const coverImage = images?.[0];
+
+    function handleAddToCart(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        // TODO: integrar com o carrinho
+    }
 
     return (
-        <article className="group bg-[#111] border border-gray-800 hover:border-purple-700/60 rounded-xl overflow-hidden transition flex flex-col">
+        <article className="group relative bg-[#111] border border-gray-800 hover:border-purple-700/60 rounded-xl overflow-hidden transition flex flex-col">
+            <Link
+                to={`/product/${id}`}
+                aria-label={`Ver detalhes de ${title}`}
+                className="absolute inset-0 z-10"
+            />
+
             <div className="relative aspect-square bg-[#0a0a0a] overflow-hidden">
-                {imageUrl ? (
+                {coverImage ? (
                     <img
-                        src={imageUrl}
-                        alt={name}
+                        src={coverImage}
+                        alt={title}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     />
                 ) : (
@@ -275,14 +291,20 @@ function ProductCard({ product }) {
 
             <div className="p-5 flex flex-col flex-1 space-y-3">
                 <div className="flex-1">
-                    {brand && <p className="text-xs text-gray-500 uppercase tracking-wide">{brand}</p>}
-                    <h2 className="text-base font-bold leading-tight mt-1 line-clamp-2">{name}</h2>
+                    {ordersCompleted > 0 && (
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">
+                            {ordersCompleted} vendidos
+                        </p>
+                    )}
+                    <h2 className="text-base font-bold leading-tight mt-1 line-clamp-2" title={description}>
+                        {title}
+                    </h2>
                 </div>
 
-                {typeof rating === 'number' && (
+                {typeof averageRating === 'number' && (
                     <div className="flex items-center gap-1 text-sm">
                         <span className="text-purple-400">★</span>
-                        <span className="text-gray-400">{rating.toFixed(1)}</span>
+                        <span className="text-gray-400">{averageRating.toFixed(1)}</span>
                     </div>
                 )}
 
@@ -295,8 +317,10 @@ function ProductCard({ product }) {
                     </div>
 
                     <button
+                        type="button"
                         disabled={!inStock}
-                        className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-md font-semibold transition text-sm"
+                        onClick={handleAddToCart}
+                        className="relative z-20 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-md font-semibold transition text-sm"
                     >
                         Adicionar
                     </button>
@@ -315,10 +339,7 @@ function Pagination({ page, totalPages, onChange }) {
     }, [page, totalPages]);
 
     return (
-        <nav
-            aria-label="Paginação"
-            className="flex items-center justify-center gap-2 mt-12"
-        >
+        <nav aria-label="Paginação" className="flex items-center justify-center gap-2 mt-12">
             <button
                 onClick={() => onChange(Math.max(0, page - 1))}
                 disabled={page === 0}

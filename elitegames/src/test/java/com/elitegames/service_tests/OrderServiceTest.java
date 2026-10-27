@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -60,7 +61,7 @@ public class OrderServiceTest {
                 .service(sampleProduct(10L))
                 .client(sampleClient())
                 .status(status)
-                .totalAmount(9999.90)
+                .totalAmount(BigDecimal.valueOf(9999.90))
                 .build();
     }
 
@@ -71,10 +72,11 @@ public class OrderServiceTest {
     void create_whenCalled_buildsPendingOrderWithProductPrice() {
         Product product = sampleProduct(10L);
         User client = sampleClient();
+        int quantity = 1;
 
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Order result = orderService.create(product, client);
+        Order result = orderService.create(product, client, quantity);
 
         assertNotNull(result);
         assertEquals(OrderStatus.PENDING, result.getStatus());
@@ -458,12 +460,12 @@ public class OrderServiceTest {
     void findBySellerUserId_returnsOrders() {
         Order o1 = sampleOrder(1L, OrderStatus.PENDING);
         Order o2 = sampleOrder(2L, OrderStatus.COMPLETED);
-        when(orderRepository.findByServiceSellerUserId(7L)).thenReturn(List.of(o1, o2));
+        when(orderRepository.findByServiceSellerId(7L)).thenReturn(List.of(o1, o2));
 
-        List<Order> result = orderService.findBySellerUserId(7L);
+        List<Order> result = orderService.findBySellerId(7L);
 
         assertEquals(2, result.size());
-        verify(orderRepository).findByServiceSellerUserId(7L);
+        verify(orderRepository).findByServiceSellerId(7L);
     }
 
     // ---------- save ----------

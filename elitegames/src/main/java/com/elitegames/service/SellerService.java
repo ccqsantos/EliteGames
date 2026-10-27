@@ -2,10 +2,13 @@ package com.elitegames.service;
 
 import com.elitegames.entity.Seller;
 import com.elitegames.entity.SellerStatus;
-import com.elitegames.entity.User;
 import com.elitegames.repository.SellerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -13,41 +16,50 @@ public class SellerService {
 
     private final SellerRepository repository;
 
-    public Seller register(User user, String storeName, String storeSlug, String taxId, String bankAccount) {
-        if (repository.findByUser(user).isPresent()) {
-            throw new RuntimeException("Este usuário já possui uma loja cadastrada.");
-        }
+    @Transactional
+    public Seller updateProfile(
+            Long sellerId,
+            String storeName,
+            String storeSlug,
+            String taxId,
+            String bankAccount
+    ) {
+        Seller seller = getById(sellerId);
 
-        Seller seller = Seller.builder()
-                .user(user)
-                .storeName(storeName)
-                .storeSlug(storeSlug)
-                .taxId(taxId)
-                .bankAccount(bankAccount)
-                .status(SellerStatus.PENDING)
-                .build();
+        if (storeName != null && !storeName.isBlank()) {
+            seller.setStoreName(storeName);
+        }
+        if (storeSlug != null && !storeSlug.isBlank()) {
+            // Garante unicidade do slug (exceto para o próprio seller)
+            repository.findByStoreSlug(storeSlug).ifPresent(other -> {
+                if (!other.getId().equals(sellerId)) {
+                    throw new RuntimeException("Slug já em uso.");
+                }
+            });
+            seller.setStoreSlug(storeSlug);
+        }
+        if (taxId != null) seller.setTaxId(taxId);
+        if (bankAccount != null) seller.setBankAccount(bankAccount);
 
         return repository.save(seller);
     }
 
-    public Seller getByUserId(Long userId) {
-        return repository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada para este usuário."));
-    }
-
+    @Transactional
     public Seller approve(Long sellerId) {
         Seller seller = getById(sellerId);
         seller.setStatus(SellerStatus.APPROVED);
-        seller.setApprovedAt(java.time.LocalDateTime.now());
+        seller.setApprovedAt(LocalDateTime.now());
         return repository.save(seller);
     }
 
+    @Transactional
     public Seller suspend(Long sellerId) {
         Seller seller = getById(sellerId);
         seller.setStatus(SellerStatus.SUSPENDED);
         return repository.save(seller);
     }
 
+    @Transactional
     public Seller reject(Long sellerId) {
         Seller seller = getById(sellerId);
         seller.setStatus(SellerStatus.REJECTED);
@@ -59,7 +71,7 @@ public class SellerService {
                 .orElseThrow(() -> new RuntimeException("Loja não encontrada."));
     }
 
-    public java.util.List<Seller> findByStatus(SellerStatus status) {
+    public List<Seller> findByStatus(SellerStatus status) {
         return repository.findByStatus(status);
     }
 }
